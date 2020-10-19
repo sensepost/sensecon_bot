@@ -2,6 +2,9 @@
 import discord
 import sqlite3
 import time
+from random import randint
+import mail
+import re
 
 TOKEN = 'NzY2Mzc0OTIzMTczODg4MDkw.X4icRA.ucegXvFx7TcGOm7o1E5OmWxRivs'
 
@@ -19,6 +22,8 @@ emoji_to_role = {
     "france" : b'\xf0\x9f\x87\xab\xf0\x9f\x87\xb7'
     }
 
+users_code = {}
+
 @client.event
 async def on_message(message):
     # we do not want the bot to reply to itself
@@ -26,7 +31,21 @@ async def on_message(message):
         return
     
     elif message.guild is None:
-        if "beautiful" in message.content.lower() or "bueatiful" in message.content.lower():
+        if "@orangecyberdefense.com" in message.content.lower():
+            otp = randint(10000, 99999)
+            users_code[message.author.id] = otp
+            emails = re.findall("([a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+)", message.content)
+            mail.send_mail(emails[0],otp)
+
+        elif str(message.content) == str(users_code[message.author.id]):
+                roles = await client.guilds[0].fetch_roles()
+                async for member in client.guilds[0].fetch_members():
+                    if member.id == message.author.id:
+                        for role in roles:
+                            if str(role) == "verified":
+                                await member.add_roles(role)
+
+        elif "beautiful" in message.content.lower() or "bueatiful" in message.content.lower():
             roles = await client.guilds[0].fetch_roles()
             async for member in client.guilds[0].fetch_members():
                 if member.id == message.author.id:
@@ -320,7 +339,8 @@ async def on_raw_message_edit(payload):
 
 @client.event
 async def on_member_join(member):
-    await member.send("Hello there fellow hacker! Could you please provide us with your Orange Cyberdefense or any Orange email address so we can verify you?")
+    print("Did i stutter?")
+    await member.send("Hello there fellow hacker! Could you please provide us with your @orangecyberdefense.com email address so we can verify you?")
 
 
 @client.event
