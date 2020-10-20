@@ -37,14 +37,25 @@ async def on_message(message):
             emails = re.findall("([a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+)", message.content)
             mail.send_mail(emails[0],otp)
 
-        elif str(message.content) == str(users_code[message.author.id]):
-                roles = await client.guilds[0].fetch_roles()
-                async for member in client.guilds[0].fetch_members():
-                    if member.id == message.author.id:
-                        for role in roles:
-                            if str(role) == "verified":
-                                await member.add_roles(role)
+        #sconwar registration
+        elif "!sconwar register" in message.content.lower():
+            async for member in client.guilds[0].fetch_members():
+                if member.id == message.author.id:
+                    verified = False
+                    for user_roles in member.roles:
+                        if user_roles.name == "verified":
+                            verified = True
+                            break
+                    
+                    if verified:
+                        print("User {} is attempting to register for sconwar".format(message.author.name))
+                        #add check to see that this is their first reg attempt.
+                        #add call to sconwar.
+                    else:
+                        await member.send("Please verify your account first before registering for sconwar. To verify your account, send me you @orangecyberdefense.com email address so that I send you an OTP.")
 
+
+        #if we recieve a DM from any user with the word beautiful then it means they eavesdropped on the Bots only chat, completing the one challenge :D
         elif "beautiful" in message.content.lower() or "bueatiful" in message.content.lower():
             roles = await client.guilds[0].fetch_roles()
             async for member in client.guilds[0].fetch_members():
@@ -52,6 +63,23 @@ async def on_message(message):
                     for role in roles:
                         if str(role) == "challenge:eavesdropper":
                             await member.add_roles(role)
+        
+        #check the otp code, if correct assign the verified role.
+        #add check that its only digits
+        elif str(message.author.id) in users_code.keys():
+            if str(message.content) == str(users_code[message.author.id]):
+                roles = await client.guilds[0].fetch_roles()
+                async for member in client.guilds[0].fetch_members():
+                    if member.id == message.author.id:
+                        for role in roles:
+                            if str(role) == "verified":
+                                await member.add_roles(role)
+                                #add code to remove
+
+        
+                    
+
+
 
     elif message.content.startswith('!'):
         msg = 'Hello {0.author.mention}'.format(message)
