@@ -5,7 +5,18 @@ import time
 from random import randint
 import mail
 import re
+import pickle
+import os.path
+from os import path
 
+
+####    #     #                 ##
+#   #   ##   ##                #  #
+#   #   # # # #               #
+# ##    #  #  #      # ###  #####
+#   #   #     #  ### ##       #
+#   #   #     #      #        #
+#   #   #     #      #        #       token
 TOKEN = 'NzY2Mzc0OTIzMTczODg4MDkw.X4icRA.ucegXvFx7TcGOm7o1E5OmWxRivs'
 
 client = discord.Client()
@@ -22,7 +33,28 @@ emoji_to_role = {
     "france" : b'\xf0\x9f\x87\xab\xf0\x9f\x87\xb7'
     }
 
-users_code = {}
+users_code = {"data":[]}
+
+def create_new_user(id, email, otp):
+    user = {}
+    user['id'] = id
+    user['email'] = email 
+    user['otp'] = otp
+    user['verified'] = False
+    user['sconwar'] = False
+    return user
+
+def save_state():
+    out_file = open("data.pkl", "wb")
+    pickle.dump(users_code, out_file)
+    out_file.close()
+
+
+def load_state():
+    global users_code
+    in_file = open("data.pkl", "rb")
+    users_code = pickle.load(in_file)
+
 
 @client.event
 async def on_message(message):
@@ -31,14 +63,40 @@ async def on_message(message):
         return
     
     elif message.guild is None:
-        if "@orangecyberdefense.com" in message.content.lower():
-            otp = randint(10000, 99999)
-            users_code[message.author.id] = otp
-            emails = re.findall("([a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+)", message.content)
-            mail.send_mail(emails[0],otp)
+        if message.content.startswith('!verify'.lower()) and ("@orangecyberdefense.com" in message.content.lower()):
+
+            verified = False
+            async for member in client.guilds[0].fetch_members():
+                if member.id == message.author.id:
+                    for user_roles in member.roles:
+                        if user_roles.name == "verified":
+                            verified = True
+                            break
+        
+            if not verified:
+                #todo add check for email is unique
+                
+                emails = re.findall("([a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+)", message.content)
+
+                verified_and_used = False
+
+                for user in users_code['data']:
+                    if user['verified'] and user['email'] == emails[0]:
+                        verified_and_used = True
+
+                if not verified_and_used:
+                    otp = randint(10000, 99999)
+                    mail.send_mail(emails[0],otp)
+                    await message.author.send("An email has been sent to {}".format(emails[0]))
+                    users_code["data"].append(create_new_user(message.author.id, emails[0], otp))
+                    save_state()
+                else:
+                    await message.author.send("An account has already been verified with the email {}".format(emails[0]))
+            else:
+                await message.author.send("You have already been verified.")
 
         #sconwar registration
-        elif "!sconwar register" in message.content.lower():
+        elif message.content.startswith('!sconwar register'.lower()):
             async for member in client.guilds[0].fetch_members():
                 if member.id == message.author.id:
                     verified = False
@@ -48,11 +106,24 @@ async def on_message(message):
                             break
                     
                     if verified:
-                        print("User {} is attempting to register for sconwar".format(message.author.name))
-                        #add check to see that this is their first reg attempt.
-                        #add call to sconwar.
+
+                        for user in users_code['data']:
+                            if user["id"] == message.author.id:
+                                if user["sconwar"]:
+                                    await member.send("You have already registered with sconwar.")
+                                    #maybe can store their sconwar uuid? and reply back if they forget/lose it?
+
+                                else:
+                                    print("User {} is attempting to register for sconwar".format(message.author.name))
+                                    #add code here to register for sconwar
+
+                                    user["sconwar"] = True
+                                    save_state()
+
+                                    
+
                     else:
-                        await member.send("Please verify your account first before registering for sconwar. To verify your account, send me you @orangecyberdefense.com email address so that I send you an OTP.")
+                        await member.send("Please verify your account first before registering for sconwar. To verify your account, send me a message with `!verify ` and your @orangecyberdefense.com email address so that I send you an OTP.")
 
 
         #if we recieve a DM from any user with the word beautiful then it means they eavesdropped on the Bots only chat, completing the one challenge :D
@@ -66,15 +137,20 @@ async def on_message(message):
         
         #check the otp code, if correct assign the verified role.
         #add check that its only digits
-        elif str(message.author.id) in users_code.keys():
-            if str(message.content) == str(users_code[message.author.id]):
-                roles = await client.guilds[0].fetch_roles()
-                async for member in client.guilds[0].fetch_members():
-                    if member.id == message.author.id:
-                        for role in roles:
-                            if str(role) == "verified":
-                                await member.add_roles(role)
-                                #add code to remove
+        elif message.content.startswith('!otp'.lower()):
+            for user in users_code['data']:
+                if user["id"] == message.author.id:
+                    otps = re.findall(r"(?<!\d)\d{5}(?!\d)", message.content)
+                    if otps[0] == str(user["otp"]):
+                        roles = await client.guilds[0].fetch_roles()
+                        async for member in client.guilds[0].fetch_members():
+                            if member.id == message.author.id:
+                                for role in roles:
+                                    if str(role) == "verified":
+                                        await member.add_roles(role)
+                                        user["verified"] = True
+                                        save_state()
+                                        #add code to remove
 
         
                     
@@ -115,13 +191,9 @@ async def on_message(message):
                         break
                 else:
                     break
-            #print(m.content)
-            #print(message.content)
-            #if message.author == client.user:
-            #    counter += 1
+
             counter+=1
             previous_message_contents = m.content
-
 
         if len(authors) > 10:
             roles = await client.guilds[0].fetch_roles()
@@ -133,6 +205,11 @@ async def on_message(message):
 
 @client.event
 async def on_ready():
+    if path.exists("data.pkl"):
+        load_state()
+
+    #TODO add checks for other files(audio)
+
     print('Logged in as')
     print(client.user.name)
     print(client.user.id)
