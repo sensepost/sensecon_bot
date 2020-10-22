@@ -95,6 +95,9 @@ async def on_message(message):
             else:
                 await message.author.send("You have already been verified.")
 
+        elif if message.content.startswith('!verify'.lower()) and not ("@orangecyberdefense.com" in message.content.lower()):
+            await message.author.send("Please provide an email address with @orangecyberdefense.com.")
+
         #sconwar registration
         elif message.content.startswith('!sconwar register'.lower()):
             async for member in client.guilds[0].fetch_members():
@@ -150,12 +153,8 @@ async def on_message(message):
                                         await member.add_roles(role)
                                         user["verified"] = True
                                         save_state()
-                                        #add code to remove
-
-        
-                    
-
-
+                                        #add code to also add hacker role for bypassing the verification process.
+                                        #add code to remove <- yes yes makes sense
 
     elif message.content.startswith('!'):
         msg = 'Hello {0.author.mention}'.format(message)
@@ -208,6 +207,9 @@ async def on_ready():
     if path.exists("data.pkl"):
         load_state()
 
+    if not path.exists('morse.mp3') or not path.exists('robot_countdown.mp3') or not path.exists('robot_talk.mp3'):
+        print('Audio files are missing for eavesdropper challenge.')
+
     #TODO add checks for other files(audio)
 
     print('Logged in as')
@@ -216,151 +218,7 @@ async def on_ready():
     print('------')
     return
     pass
-    #initialise roles
-    for chanchan in client.get_all_channels():
-        if chanchan.name == "announcements":
-            print("I see anouncements")
-            msgs = await chanchan.history(limit=100).flatten()
-            for msg in msgs:
-                member = msg.author
-                #role = discord.utils.get(msg.server.roles, name="Bots")
-                ##print(role)
-                #for guild in client.guilds:
-                #    roles = await guild.fetch_roles()
-                #    for role in roles:
-                #        print(role)
-                
-                print("x")
-                for reac in msg.reactions:
-                    #print("y")
-                    #print(bytes(str(reac)))
-                    #print(discord.utils.get(discord.Guild.emojis, name=reac.emoji))
-                    #print(discord.utils.get(reac.emoji))
-                    #if isinstance(reac.emoji, str):
-                    #    print('eh')
-                    #else:
-                    #print(reac.emoji)
-                    print(reac.emoji.encode('utf8'))
 
-                    '''
-
-                    users = await reac.users().flatten()
-
-                    #for guild in client.guilds:
-                    #    for member in guild.members:
-                    #        print(member.name)
-
-
-                    members = []
-                    async for member in msg.guild.fetch_members():
-                        members.append(member)
-                    #for mem in members:
-                    #    print(mem.name)
-                    roles = await msg.guild.fetch_roles()
-
-                    #for u in msg.guild.members:
-                    #    print(u.name)
-                    
-                    #for member in client.get_all_members():
-                    #    print("mem "+member.name)
-
-                    #for u in users:
-                    #    print("user "+u.name)
-                    #pass    
-                    for u in users:
-                        if reac.emoji.encode('utf8') == b'\xf0\x9f\x87\xb3\xf0\x9f\x87\xb4': #Norway
-                            for member in members:
-                                if u.name == member.name:
-                                    for role in roles:
-                                        if str(role) == "norway":
-                                            print("added role")
-                                            await member.add_roles(role)
-                            #await set_role(members, u, "norway")
-                            pass
-
-                        elif reac.emoji.encode('utf8') == b'\xf0\x9f\x87\xa7\xf0\x9f\x87\xaa': #Blegium
-                            for member in members:
-                                if u.name == member.name:
-                                    for role in roles:
-                                        if str(role) == "belgium":
-                                            print("added role")
-                                            await member.add_roles(role)
-                            pass
-
-                        elif reac.emoji.encode('utf8') == b'\xf0\x9f\x87\xa9\xf0\x9f\x87\xaa': #Germany
-                            for member in members:
-                                if u.name == member.name:
-                                    for role in roles:
-                                        if str(role) == "germany":
-                                            print("added role")
-                                            await member.add_roles(role)
-                            pass
-
-                        elif reac.emoji.encode('utf8') == b'\xf0\x9f\x87\xac\xf0\x9f\x87\xa7': #United Kingdom
-                            for member in members:
-                                if u.name == member.name:
-                                    for role in roles:
-                                        if str(role) == "united kingdom":
-                                            print("added role")
-                                            await member.add_roles(role)
-                            pass
-
-                        elif reac.emoji.encode('utf8') == b'\xf0\x9f\x87\xb8\xf0\x9f\x87\xaa': #Sweden
-                            for member in members:
-                                if u.name == member.name:
-                                    for role in roles:
-                                        if str(role) == "sweden":
-                                            print("added role")
-                                            await member.add_roles(role)
-                            pass
-
-                        elif reac.emoji.encode('utf8') == b'\xf0\x9f\x87\xb3\xf0\x9f\x87\xb1': #Netherlands
-                            for member in members:
-                                if u.name == member.name:
-                                    for role in roles:
-                                        if str(role) == "netherlands":
-                                            print("added role")
-                                            await member.add_roles(role)
-                            pass
-
-                        elif reac.emoji.encode('utf8') == b'\xf0\x9f\x87\xbf\xf0\x9f\x87\xa6': #South Africa
-                            for member in members:
-                                if u.name == member.name:
-                                    for role in roles:
-                                        if str(role) == "south africa":
-                                            print("added role")
-                                            await member.add_roles(role)
-                            pass
-
-                        elif reac.emoji.encode('utf8') == b'\xf0\x9f\x87\xb2\xf0\x9f\x87\xa6': #Morocco
-                            for member in members:
-                                if u.name == member.name:
-                                    for role in roles:
-                                        if str(role) == "morocco":
-                                            print("added role")
-                                            await member.add_roles(role)
-                            pass
-
-'''
-
-
-
-                    
-
-#async def set_role(_members, _user, _role):
-
-    #for member in _members:
-
-    
-    #for guild in client.guilds:
-    #    for member in guild.members:
-    #        if member.name == _user.name:
-    #            print("found member")
-    #        
-        #for role in roles:
-        #    if str(role) == _role:
-        #        print("did we find it?")
-        #        member.add_roles(role)
 
 @client.event
 async def on_raw_reaction_add(payload):
@@ -489,71 +347,6 @@ async def on_voice_state_update(member, before, after):
             await vc.disconnect()
             await voice_channel.delete()
 
-
-
-'''
-    
-
-'''
-
-
-'''
-
-
-    if payload.emoji.name.encode('utf8') == b'\xf0\x9f\x87\xb3\xf0\x9f\x87\xb4': #Norway
-        
-        #await set_role(members, u, "norway")
-        pass
-
-    elif payload.emoji.name.encode('utf8') == b'\xf0\x9f\x87\xa7\xf0\x9f\x87\xaa': #Blegium
-        for role in roles:
-            if str(role) == "belgium":
-                print("added role")
-                await payload.member.add_roles(role)
-        pass
-
-    elif payload.emoji.name.encode('utf8') == b'\xf0\x9f\x87\xa9\xf0\x9f\x87\xaa': #Germany
-        for role in roles:
-            if str(role) == "germany":
-                print("added role")
-                await payload.member.add_roles(role)
-        pass
-
-    elif payload.emoji.name.encode('utf8') == b'\xf0\x9f\x87\xac\xf0\x9f\x87\xa7': #United Kingdom
-        for role in roles:
-            if str(role) == "united kingdom":
-                print("added role")
-                await payload.member.add_roles(role)
-        pass
-
-    elif payload.emoji.name.encode('utf8') == b'\xf0\x9f\x87\xb8\xf0\x9f\x87\xaa': #Sweden
-        for role in roles:
-            if str(role) == "sweden":
-                print("added role")
-                await payload.member.add_roles(role)
-        pass
-
-    elif payload.emoji.name.encode('utf8') == b'\xf0\x9f\x87\xb3\xf0\x9f\x87\xb1': #Netherlands
-        for role in roles:
-            if str(role) == "netherlands":
-                print("added role")
-                await payload.member.add_roles(role)
-        pass
-
-    elif payload.emoji.name.encode('utf8') == b'\xf0\x9f\x87\xbf\xf0\x9f\x87\xa6': #South Africa
-        for role in roles:
-            if str(role) == "south africa":
-                print("added role")
-                await payload.member.add_roles(role)
-        pass
-
-    elif payload.emoji.name.encode('utf8') == b'\xf0\x9f\x87\xb2\xf0\x9f\x87\xa6': #Morocco
-        for role in roles:
-            if str(role) == "morocco":
-                print("added role")
-                await payload.member.add_roles(role)
-        pass
-'''
 
     #channel = client.get_channel(message.channel_id)
     #await channel.send('I saw a reaction!')
