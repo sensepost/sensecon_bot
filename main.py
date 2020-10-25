@@ -289,8 +289,14 @@ async def on_raw_message_edit(payload):
 async def on_member_join(member):
     await member.send("Hello there fellow hacker! Could you please provide us with a @orangecyberdefense.com email address using `!verify` so we can verify you?")
 
+playing_morse_challenge = False
+
+
 @client.event
 async def on_voice_state_update(member, before, after):
+    if playing_morse_challenge:
+        return
+
     voice_channels = client.guilds[0].voice_channels
 
     exists = False
@@ -314,6 +320,7 @@ async def on_voice_state_update(member, before, after):
                 exists = True
 
         if not exists:
+            playing_morse_challenge = True
             voice_channel = await client.guilds[0].create_voice_channel("Bots only")
             vc = await voice_channel.connect()
             ffmpeg = shutil.which('ffmpeg')
@@ -332,6 +339,7 @@ async def on_voice_state_update(member, before, after):
             print('I reached this?')
             await vc.disconnect()
             await voice_channel.delete()
+            playing_morse_challenge = False
 
 
 client.run(TOKEN)
