@@ -294,6 +294,7 @@ playing_morse_challenge = False
 
 @client.event
 async def on_voice_state_update(member, before, after):
+    global playing_morse_challenge
     if playing_morse_challenge:
         return
 
