@@ -6,6 +6,7 @@ import mail
 import re
 import pickle
 import os.path
+import shutil
 from os import path
 
 
@@ -315,15 +316,16 @@ async def on_voice_state_update(member, before, after):
         if not exists:
             voice_channel = await client.guilds[0].create_voice_channel("Bots only")
             vc = await voice_channel.connect()
-            vc.play(discord.FFmpegPCMAudio(executable="/usr/bin/ffmpeg", source="robot_talk.mp3"))
+            ffmpeg = shutil.which('ffmpeg')
+            vc.play(discord.FFmpegPCMAudio(executable=ffmpeg, source="robot_talk.mp3"))
             while vc.is_playing():
                 time.sleep(.1)
 
-            vc.play(discord.FFmpegPCMAudio(executable="/usr/bin/ffmpeg", source="robot_countdown.mp3"))
+            vc.play(discord.FFmpegPCMAudio(executable=ffmpeg, source="robot_countdown.mp3"))
             while vc.is_playing():
                 time.sleep(.1)
 
-            vc.play(discord.FFmpegPCMAudio(executable="/usr/bin/ffmpeg", source="morse.mp3"))
+            vc.play(discord.FFmpegPCMAudio(executable=ffmpeg, source="morse.mp3"))
             while vc.is_playing():
                 time.sleep(.1)
 
