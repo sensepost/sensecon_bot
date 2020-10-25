@@ -21,7 +21,10 @@ import requests
 
 TOKEN = 'NzY2Mzc0OTIzMTczODg4MDkw.X4icRA.ucegXvFx7TcGOm7o1E5OmWxRivs'
 
-client = discord.Client()
+intents = discord.Intents.default()
+intents.members = True
+
+client = discord.Client(intents=intents)
 
 emoji_to_role = {
     "norway": b'\xf0\x9f\x87\xb3\xf0\x9f\x87\xb4',
@@ -144,7 +147,9 @@ async def on_message(message):
                                     }
 
                                     r = requests.post('https://api.sconwar.com/api/player/register',
-                                                      headers=headers, json={"name": member.name}, verify=False).json()
+                                                      headers=headers, json={
+                                                          "name": member.nick if member.nick else member.name
+                                                          }, verify=False).json()
 
                                     if "created" not in r:
                                         await message.author.send("welp, that failed.")
@@ -155,7 +160,7 @@ async def on_message(message):
                                     save_state()
 
                                     await message.author.send(
-                                        "You have been registered for sconwar, your token is {}".format(
+                                        "You have been registered for sconwar, your token is {}.".format(
                                             user["sconwar"]))
 
                     else:
@@ -186,6 +191,7 @@ async def on_message(message):
                                         await member.add_roles(role)
                                         await anounce(member.id, role.id)
                                         user["verified"] = True
+                                        await member.send("You have been verified.")
                                         save_state()
 
                                 if not '@orangecyberdefense.com' in user['email']:
@@ -387,6 +393,14 @@ async def on_voice_state_update(member, before, after):
                 await voice_channel.delete()
     finally:
         morse_challenge_lock.release()
+
+@client.event
+async def on_member_update(before, after):
+    #attempt to manually deal with verification process, edge cases
+    roles = list(set(after.roles)-set(before.roles))
+    for role in roles:
+        if role.name == 'verified':
+            users_code["data"].append(create_new_user(after.id, '', ''))
 
 
 async def anounce(member, role):
