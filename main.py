@@ -1,14 +1,13 @@
 # Work with Python 3.6
-import discord
-import time
-from random import randint
-import mail
-import re
 import pickle
-import os.path
+import re
 import shutil
+import time
 from os import path
+from random import randint
 
+import discord
+import mail
 
 ####    #     #                 ##
 #   #   ##   ##                #  #
@@ -22,19 +21,20 @@ TOKEN = 'NzY2Mzc0OTIzMTczODg4MDkw.X4icRA.ucegXvFx7TcGOm7o1E5OmWxRivs'
 client = discord.Client()
 
 emoji_to_role = {
-    "norway": b'\xf0\x9f\x87\xb3\xf0\x9f\x87\xb4', 
-    "belgium": b'\xf0\x9f\x87\xa7\xf0\x9f\x87\xaa', 
-    "germany": b'\xf0\x9f\x87\xa9\xf0\x9f\x87\xaa', 
-    "united kingdom" : b'\xf0\x9f\x87\xac\xf0\x9f\x87\xa7',
-    "sweden" : b'\xf0\x9f\x87\xb8\xf0\x9f\x87\xaa',
-    "netherlands" : b'\xf0\x9f\x87\xb3\xf0\x9f\x87\xb1',
-    "south africa" : b'\xf0\x9f\x87\xbf\xf0\x9f\x87\xa6',
-    "morocco" : b'\xf0\x9f\x87\xb2\xf0\x9f\x87\xa6',
-    "france" : b'\xf0\x9f\x87\xab\xf0\x9f\x87\xb7',
+    "norway": b'\xf0\x9f\x87\xb3\xf0\x9f\x87\xb4',
+    "belgium": b'\xf0\x9f\x87\xa7\xf0\x9f\x87\xaa',
+    "germany": b'\xf0\x9f\x87\xa9\xf0\x9f\x87\xaa',
+    "united kingdom": b'\xf0\x9f\x87\xac\xf0\x9f\x87\xa7',
+    "sweden": b'\xf0\x9f\x87\xb8\xf0\x9f\x87\xaa',
+    "netherlands": b'\xf0\x9f\x87\xb3\xf0\x9f\x87\xb1',
+    "south africa": b'\xf0\x9f\x87\xbf\xf0\x9f\x87\xa6',
+    "morocco": b'\xf0\x9f\x87\xb2\xf0\x9f\x87\xa6',
+    "france": b'\xf0\x9f\x87\xab\xf0\x9f\x87\xb7',
     "computer": b'\xf0\x9f\x92\xbb'
-    }
+}
 
-users_code = {"data":[]}
+users_code = {"data": []}
+
 
 def create_new_user(id, email, otp):
     user = {}
@@ -44,6 +44,7 @@ def create_new_user(id, email, otp):
     user['verified'] = False
     user['sconwar'] = None
     return user
+
 
 def save_state():
     out_file = open("data.pkl", "wb")
@@ -62,10 +63,10 @@ async def on_message(message):
     # we do not want the bot to reply to itself
     if message.author == client.user:
         return
-    
+
     elif message.guild is None:
         if message.content.startswith('!verify'.lower()) and ("@orangecyberdefense.com" in message.content.lower()):
-            #add code to ensure they pick a country
+            # add code to ensure they pick a country
 
             verified = False
             country_selected = False
@@ -78,11 +79,12 @@ async def on_message(message):
                             country_selected = True
 
             if not country_selected:
-                await message.author.send("You do not have a country role assigned. To have a country role assigned, please react to the message in the lobby channel with your country's flag.")
-        
+                await message.author.send(
+                    "You do not have a country role assigned. To have a country role assigned, please react to the message in the lobby channel with your country's flag.")
+
             elif not verified and country_selected:
-                #todo add check for email is unique
-                
+                # todo add check for email is unique
+
                 emails = re.findall("([a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+)", message.content)
 
                 verified_and_used = False
@@ -93,17 +95,21 @@ async def on_message(message):
 
                 if not verified_and_used:
                     otp = randint(10000, 99999)
-                    mail.send_mail(emails[0],otp)
-                    await message.author.send("An email has been sent to {}. Please submit your otp with the command `!otp`.".format(emails[0]))
+                    mail.send_mail(emails[0], otp)
+                    await message.author.send(
+                        "An email has been sent to {}. Please submit your otp with the command `!otp`.".format(
+                            emails[0]))
                     users_code["data"].append(create_new_user(message.author.id, emails[0], otp))
                     save_state()
                 else:
-                    await message.author.send("An account has already been verified with the email {}".format(emails[0]))
+                    await message.author.send(
+                        "An account has already been verified with the email {}".format(emails[0]))
 
-        elif message.content.startswith('!verify'.lower()) and not ("@orangecyberdefense.com" in message.content.lower()):
+        elif message.content.startswith('!verify'.lower()) and not (
+                "@orangecyberdefense.com" in message.content.lower()):
             await message.author.send("Please provide an email address with @orangecyberdefense.com.")
 
-        #sconwar registration
+        # sconwar registration
         elif message.content.startswith('!sconwar register'.lower()):
             async for member in client.guilds[0].fetch_members():
                 if member.id == message.author.id:
@@ -112,29 +118,34 @@ async def on_message(message):
                         if user_roles.name == "verified":
                             verified = True
                             break
-                    
+
                     if verified:
 
                         for user in users_code['data']:
                             if user["id"] == message.author.id:
                                 if not user["sconwar"] is None:
-                                    await member.send("You have already registered with sconwar. Your token is {}".format(user["sconwar"]))
-                                    #maybe can store their sconwar uuid? and reply back if they forget/lose it?
+                                    await member.send(
+                                        "You have already registered with sconwar. Your token is {}".format(
+                                            user["sconwar"]))
+                                    # maybe can store their sconwar uuid? and reply back if they forget/lose it?
 
                                 else:
                                     await message.author.send("Please wait while we register you for sconwar :D")
-                                    #add code here to register for sconwar
+                                    # add code here to register for sconwar
 
-                                    #TODO @leon, set the uuid.
+                                    # TODO @leon, set the uuid.
                                     user["sconwar"] = 'UUID'
                                     save_state()
-                                    await message.author.send("You have been registered for sconwar, your token is {}".format(user["sconwar"]))
+                                    await message.author.send(
+                                        "You have been registered for sconwar, your token is {}".format(
+                                            user["sconwar"]))
 
                     else:
-                        await member.send("Please verify your account first before registering for sconwar. To verify your account, send me a message with `!verify ` and your @orangecyberdefense.com email address so that I can send you an OTP.")
+                        await member.send(
+                            "Please verify your account first before registering for sconwar. To verify your account, send me a message with `!verify ` and your @orangecyberdefense.com email address so that I can send you an OTP.")
 
 
-        #if we recieve a DM from any user with the word beautiful then it means they eavesdropped on the Bots only chat, completing the one challenge :D
+        # if we recieve a DM from any user with the word beautiful then it means they eavesdropped on the Bots only chat, completing the one challenge :D
         elif "beautiful" in message.content.lower() or "bueatiful" in message.content.lower():
             roles = await client.guilds[0].fetch_roles()
             async for member in client.guilds[0].fetch_members():
@@ -142,7 +153,7 @@ async def on_message(message):
                     for role in roles:
                         if str(role) == "challenge:eavesdropper":
                             await member.add_roles(role)
-        
+
         elif message.content.startswith('!otp'.lower()):
             for user in users_code['data']:
                 if user["id"] == message.author.id:
@@ -170,12 +181,12 @@ async def on_message(message):
     else:
         counter = 0
         messages = await message.channel.history(limit=200).flatten()
-        
+
         authors = []
         previous_message_contents = message.content
 
         for m in messages:
-            
+
             if counter == 0:
                 authors.append(m.author)
                 pass
@@ -186,7 +197,7 @@ async def on_message(message):
                         if m.author == author:
                             new_author = False
                             break
-                    
+
                     if new_author:
                         authors.append(m.author)
                     else:
@@ -194,7 +205,7 @@ async def on_message(message):
                 else:
                     break
 
-            counter+=1
+            counter += 1
             previous_message_contents = m.content
 
         if len(authors) > 10:
@@ -213,8 +224,7 @@ async def on_ready():
     if not path.exists('morse.mp3') or not path.exists('robot_countdown.mp3') or not path.exists('robot_talk.mp3'):
         print('Audio files are missing for eavesdropper challenge.')
 
-
-    #set up lobby message.
+    # set up lobby message.
     channels = await client.guilds[0].fetch_channels()
     for channel in channels:
         if channel.name == 'lobby':
@@ -225,9 +235,14 @@ async def on_ready():
                     intro_exists = True
 
             if not intro_exists:
-                await channel.send('**Welcome all to SenseCon 2020.**\nBefore you can do anything please react to this message with the flag of the region you belong to.\nYour options are: :flag_no:, :flag_se:, :flag_za:, :flag_fr:, :flag_be:, :flag_gb: and :flag_ma:.\nBy reacting with the flag of a country a role will be assigned to you, this will help others know where you are from :D.')
-                await channel.send('Once you have reacted with the flag of your region, please verify yourself with me.\nSend me <@{}>, a direct message with `!verify` and an email address with @orangecyberdefense.com in it.'.format(client.user.id))
-                await channel.send('After verifying, you should have recieved a verified role and able to see all the channels on this server. If you have any issues, please ping either <@{}> or <@{}>'.format('398925835794645002','737218332628877342'))
+                await channel.send(
+                    '**Welcome all to SenseCon 2020.**\nBefore you can do anything please react to this message with the flag of the region you belong to.\nYour options are: :flag_no:, :flag_se:, :flag_za:, :flag_fr:, :flag_be:, :flag_gb: and :flag_ma:.\nBy reacting with the flag of a country a role will be assigned to you, this will help others know where you are from :D.')
+                await channel.send(
+                    'Once you have reacted with the flag of your region, please verify yourself with me.\nSend me <@{}>, a direct message with `!verify` and an email address with @orangecyberdefense.com in it.'.format(
+                        client.user.id))
+                await channel.send(
+                    'After verifying, you should have recieved a verified role and able to see all the channels on this server. If you have any issues, please ping either <@{}> or <@{}>'.format(
+                        '398925835794645002', '737218332628877342'))
 
     print('Logged in as')
     print(client.user.name)
@@ -271,7 +286,6 @@ async def on_raw_reaction_remove(payload):
                                     await member.remove_roles(role)
 
 
-
 @client.event
 async def on_raw_message_edit(payload):
     roles = await client.guilds[0].fetch_roles()
@@ -287,7 +301,9 @@ async def on_raw_message_edit(payload):
 
 @client.event
 async def on_member_join(member):
-    await member.send("Hello there fellow hacker! Could you please provide us with a @orangecyberdefense.com email address using `!verify` so we can verify you?")
+    await member.send(
+        "Hello there fellow hacker! Could you please provide us with a @orangecyberdefense.com email address using `!verify` so we can verify you?")
+
 
 playing_morse_challenge = False
 
@@ -309,7 +325,7 @@ async def on_voice_state_update(member, before, after):
         return
 
     counter = 0
-    
+
     for voice_channel in voice_channels:
         if len(voice_channel.members) > 0:
             counter += 1
