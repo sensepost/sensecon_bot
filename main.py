@@ -144,7 +144,7 @@ async def on_message(message):
                                     }
 
                                     r = requests.post('https://api.sconwar.com/api/player/register',
-                                                      headers=headers, data={"name": member.name}, verify=False).json()
+                                                      headers=headers, json={"name": member.name}, verify=False).json()
 
                                     if "created" not in r:
                                         await message.author.send("welp, that failed.")
