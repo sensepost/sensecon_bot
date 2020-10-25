@@ -5,9 +5,11 @@ import shutil
 import time
 from os import path
 from random import randint
-from threading import Lock 
+from threading import Lock
+
 import discord
 import mail
+import requests
 
 ####    #     #                 ##
 #   #   ##   ##                #  #
@@ -133,10 +135,24 @@ async def on_message(message):
                                     await message.author.send("Please wait while we register you for sconwar :D")
                                     # add code here to register for sconwar
 
-                                    # TODO @leon, set the uuid.
+                                    # sconwar registration
+                                    headers = {
+                                        'accept': 'application/json',
+                                        'token': '9b0c3e10-26ea-48a5-8097-599b4824c35c',  # <-- sekret
+                                        'Content-Type': 'application/json',
+                                    }
+
+                                    r = requests.post('https://api.sconwar.com/api/player/register', headers=headers,
+                                                      data={"name": member.name}, verify=False).json()
+
+                                    if "created" not in r:
+                                        await message.author.send("welp, that failed.")
+                                        return
+
                                     # To get name use - member.name
-                                    user["sconwar"] = 'UUID'
+                                    user["sconwar"] = r["uuid"]
                                     save_state()
+
                                     await message.author.send(
                                         "You have been registered for sconwar, your token is {}".format(
                                             user["sconwar"]))
@@ -314,7 +330,9 @@ async def on_member_join(member):
     await member.send(
         "Hello there fellow hacker! Could you please provide us with a @orangecyberdefense.com email address using `!verify` so we can verify you?")
 
+
 morse_challenge_lock = Lock()
+
 
 @client.event
 async def on_voice_state_update(member, before, after):
@@ -369,12 +387,12 @@ async def on_voice_state_update(member, before, after):
     finally:
         morse_challenge_lock.release()
 
+
 async def anounce(member, role):
     channels = await client.guilds[0].fetch_channels()
     for channel in channels:
         if channel.name == 'roles' and isinstance(channel, discord.TextChannel):
             await channel.send('<@{}> was assigned the role <@&{}>'.format(member, role))
-
 
 
 client.run(TOKEN)
