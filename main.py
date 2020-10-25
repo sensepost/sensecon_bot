@@ -134,6 +134,7 @@ async def on_message(message):
                                     # add code here to register for sconwar
 
                                     # TODO @leon, set the uuid.
+                                    # To get name use - member.name
                                     user["sconwar"] = 'UUID'
                                     save_state()
                                     await message.author.send(
