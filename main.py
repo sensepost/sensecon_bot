@@ -5,7 +5,7 @@ import shutil
 import time
 from os import path
 from random import randint
-
+from threading import Lock 
 import discord
 import mail
 
@@ -304,59 +304,60 @@ async def on_member_join(member):
     await member.send(
         "Hello there fellow hacker! Could you please provide us with a @orangecyberdefense.com email address using `!verify` so we can verify you?")
 
-
-playing_morse_challenge = False
-
+morse_challenge_lock = Lock()
 
 @client.event
 async def on_voice_state_update(member, before, after):
-    global playing_morse_challenge
-    if playing_morse_challenge:
+    global morse_challenge_lock
+
+    if morse_challenge_lock.locked():
         return
 
-    voice_channels = client.guilds[0].voice_channels
+    morse_challenge_lock.acquire()
+    try:
 
-    exists = False
-    for voice_channel in voice_channels:
-        if voice_channel.name == "Bots only":
-            exists = True
+        voice_channels = client.guilds[0].voice_channels
 
-    if exists:
-        return
-
-    counter = 0
-
-    for voice_channel in voice_channels:
-        if len(voice_channel.members) > 0:
-            counter += 1
-
-    voice_channel = None
-    if counter > 5:
+        exists = False
         for voice_channel in voice_channels:
             if voice_channel.name == "Bots only":
                 exists = True
 
-        if not exists:
-            playing_morse_challenge = True
-            voice_channel = await client.guilds[0].create_voice_channel("Bots only")
-            vc = await voice_channel.connect()
-            ffmpeg = shutil.which('ffmpeg')
-            vc.play(discord.FFmpegPCMAudio(executable=ffmpeg, source="robot_talk.mp3"))
-            while vc.is_playing():
-                time.sleep(.1)
+        if exists:
+            return
 
-            vc.play(discord.FFmpegPCMAudio(executable=ffmpeg, source="robot_countdown.mp3"))
-            while vc.is_playing():
-                time.sleep(.1)
+        counter = 0
 
-            vc.play(discord.FFmpegPCMAudio(executable=ffmpeg, source="morse.mp3"))
-            while vc.is_playing():
-                time.sleep(.1)
+        for voice_channel in voice_channels:
+            if len(voice_channel.members) > 0:
+                counter += 1
 
-            print('I reached this?')
-            await vc.disconnect()
-            await voice_channel.delete()
-            playing_morse_challenge = False
+        voice_channel = None
+        if counter > 0:
+            for voice_channel in voice_channels:
+                if voice_channel.name == "Bots only":
+                    exists = True
+
+            if not exists:
+                voice_channel = await client.guilds[0].create_voice_channel("Bots only")
+                vc = await voice_channel.connect()
+                ffmpeg = shutil.which('ffmpeg')
+                vc.play(discord.FFmpegPCMAudio(executable=ffmpeg, source="robot_talk.mp3"))
+                while vc.is_playing():
+                    time.sleep(.1)
+
+                vc.play(discord.FFmpegPCMAudio(executable=ffmpeg, source="robot_countdown.mp3"))
+                while vc.is_playing():
+                    time.sleep(.1)
+
+                vc.play(discord.FFmpegPCMAudio(executable=ffmpeg, source="morse.mp3"))
+                while vc.is_playing():
+                    time.sleep(.1)
+
+                await vc.disconnect()
+                await voice_channel.delete()
+    finally:
+        morse_challenge_lock.release()
 
 
 client.run(TOKEN)
