@@ -30,7 +30,8 @@ emoji_to_role = {
     "netherlands" : b'\xf0\x9f\x87\xb3\xf0\x9f\x87\xb1',
     "south africa" : b'\xf0\x9f\x87\xbf\xf0\x9f\x87\xa6',
     "morocco" : b'\xf0\x9f\x87\xb2\xf0\x9f\x87\xa6',
-    "france" : b'\xf0\x9f\x87\xab\xf0\x9f\x87\xb7'
+    "france" : b'\xf0\x9f\x87\xab\xf0\x9f\x87\xb7',
+    "computer": b'\xf0\x9f\x92\xbb'
     }
 
 users_code = {"data":[]}
@@ -38,10 +39,10 @@ users_code = {"data":[]}
 def create_new_user(id, email, otp):
     user = {}
     user['id'] = id
-    user['email'] = email 
+    user['email'] = email.lower()
     user['otp'] = otp
     user['verified'] = False
-    user['sconwar'] = False
+    user['sconwar'] = None
     return user
 
 def save_state():
@@ -64,16 +65,22 @@ async def on_message(message):
     
     elif message.guild is None:
         if message.content.startswith('!verify'.lower()) and ("@orangecyberdefense.com" in message.content.lower()):
+            #add code to ensure they pick a country
 
             verified = False
+            country_selected = False
             async for member in client.guilds[0].fetch_members():
                 if member.id == message.author.id:
                     for user_roles in member.roles:
                         if user_roles.name == "verified":
                             verified = True
-                            break
+                        if user_roles.name in emoji_to_role.keys():
+                            country_selected = True
+
+            if not country_selected:
+                await message.author.send("You do not have a country role assigned. To have a country role assigned, please react to the message in the lobby channel with your country's flag.")
         
-            if not verified:
+            elif not verified and country_selected:
                 #todo add check for email is unique
                 
                 emails = re.findall("([a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+)", message.content)
@@ -92,10 +99,8 @@ async def on_message(message):
                     save_state()
                 else:
                     await message.author.send("An account has already been verified with the email {}".format(emails[0]))
-            else:
-                await message.author.send("You have already been verified.")
 
-        elif if message.content.startswith('!verify'.lower()) and not ("@orangecyberdefense.com" in message.content.lower()):
+        elif message.content.startswith('!verify'.lower()) and not ("@orangecyberdefense.com" in message.content.lower()):
             await message.author.send("Please provide an email address with @orangecyberdefense.com.")
 
         #sconwar registration
@@ -112,21 +117,21 @@ async def on_message(message):
 
                         for user in users_code['data']:
                             if user["id"] == message.author.id:
-                                if user["sconwar"]:
-                                    await member.send("You have already registered with sconwar.")
+                                if not user["sconwar"] is None:
+                                    await member.send("You have already registered with sconwar. Your token is {}".format(user["sconwar"]))
                                     #maybe can store their sconwar uuid? and reply back if they forget/lose it?
 
                                 else:
-                                    print("User {} is attempting to register for sconwar".format(message.author.name))
+                                    await message.author.send("Please wait while we register you for sconwar :D")
                                     #add code here to register for sconwar
 
-                                    user["sconwar"] = True
+                                    #TODO @leon, set the uuid.
+                                    user["sconwar"] = 'UUID'
                                     save_state()
-
-                                    
+                                    await message.author.send("You have been registered for sconwar, your token is {}".format(user["sconwar"]))
 
                     else:
-                        await member.send("Please verify your account first before registering for sconwar. To verify your account, send me a message with `!verify ` and your @orangecyberdefense.com email address so that I send you an OTP.")
+                        await member.send("Please verify your account first before registering for sconwar. To verify your account, send me a message with `!verify ` and your @orangecyberdefense.com email address so that I can send you an OTP.")
 
 
         #if we recieve a DM from any user with the word beautiful then it means they eavesdropped on the Bots only chat, completing the one challenge :D
@@ -138,8 +143,6 @@ async def on_message(message):
                         if str(role) == "challenge:eavesdropper":
                             await member.add_roles(role)
         
-        #check the otp code, if correct assign the verified role.
-        #add check that its only digits
         elif message.content.startswith('!otp'.lower()):
             for user in users_code['data']:
                 if user["id"] == message.author.id:
@@ -153,8 +156,11 @@ async def on_message(message):
                                         await member.add_roles(role)
                                         user["verified"] = True
                                         save_state()
-                                        #add code to also add hacker role for bypassing the verification process.
-                                        #add code to remove <- yes yes makes sense
+
+                                if not '@orangecyberdefense.com' in user['email']:
+                                    for role in roles:
+                                        if str(role) == "challenge:hacker":
+                                            await member.add_roles(role)
 
     elif message.content.startswith('!'):
         msg = 'Hello {0.author.mention}'.format(message)
@@ -167,8 +173,6 @@ async def on_message(message):
         
         authors = []
         previous_message_contents = message.content
-
-        print("I am here")
 
         for m in messages:
             
@@ -185,7 +189,6 @@ async def on_message(message):
                     
                     if new_author:
                         authors.append(m.author)
-                        print("found a message")
                     else:
                         break
                 else:
@@ -210,8 +213,6 @@ async def on_ready():
     if not path.exists('morse.mp3') or not path.exists('robot_countdown.mp3') or not path.exists('robot_talk.mp3'):
         print('Audio files are missing for eavesdropper challenge.')
 
-    #TODO add checks for other files(audio)
-
     print('Logged in as')
     print(client.user.name)
     print(client.user.id)
@@ -222,21 +223,7 @@ async def on_ready():
 
 @client.event
 async def on_raw_reaction_add(payload):
-    #if payload.guild_id is None:
-    #    return  # Reaction is on a private message
-    #guild = client.get_guild(payload.guild_id)
-    #role = discord.utils.get(guild.roles, name="check-in")
-    #member = guild.get_member(payload.user_id)
-    #if str(payload.channel_id) in check_in:
-    #    await member.add_roles(role, reason="check-in")
-
-    #guild = client.guilds[0]
-
-    #message=await client.get_message(payload.channel_id,payload.message_id)
-    #print(message.content)
-
     roles = await client.guilds[0].fetch_roles()
-    #print(payload.emoji.name)
 
     channel = await client.fetch_channel(payload.channel_id)
     if channel.name == "lobby":
@@ -247,22 +234,15 @@ async def on_raw_reaction_add(payload):
                     for role in roles:
                         if str(role) == flag:
                             await payload.member.add_roles(role)
-                            print("added role")
+                        if flag == 'computer' and str(role) == 'challenge:fuzzer':
+                            await payload.member.add_roles(role)
+
+
 
 
 @client.event
 async def on_raw_reaction_remove(payload):
     roles = await client.guilds[0].fetch_roles()
-    #print(payload.emoji.name)
-    #print(payload.user_id)
-
-    #print(client.guilds[0].get_member(payload.user_id))
-
-    #for mem in client.guilds[0].members:
-    #    print(mem.name)
-
-    #message=await client.get_message(payload.channel_id,payload.message_id)
-    #print(message.content)
 
     channel = await client.fetch_channel(payload.channel_id)
     if channel.name == "lobby":
@@ -275,15 +255,7 @@ async def on_raw_reaction_remove(payload):
                             for role in roles:
                                 if str(role) == flag:
                                     await member.remove_roles(role)
-                                    print("removed role")
 
-    #message=await client.get_message(payload.channel_id,payload.message_id)
-    #print(message.content)
-
-   
-            
-        #print(member.name)
-        #print(member.id)
 
 
 @client.event
@@ -296,31 +268,24 @@ async def on_raw_message_edit(payload):
         if member.id == user.id:
             for role in roles:
                 if str(role) == "challenge:sneaky":
-                    print("I want to add role")
                     await member.add_roles(role)
 
 
 @client.event
 async def on_member_join(member):
-    print("Did i stutter?")
-    await member.send("Hello there fellow hacker! Could you please provide us with your @orangecyberdefense.com email address so we can verify you?")
+    await member.send("Hello there fellow hacker! Could you please provide us with a @orangecyberdefense.com email address using `!verify` so we can verify you?")
 
 
 @client.event
 async def on_voice_state_update(member, before, after):
-    print("picked up")
     counter = 0
     voice_channels = client.guilds[0].voice_channels
     for voice_channel in voice_channels:
-        #someone is in the channel
-        print("looping")
         if len(voice_channel.members) > 0:
-            print("someone is here")
             counter += 1
 
     voice_channel = None
     exists = False
-    #if more than 5 voice channels have people connected then we should start our secret bot
     if counter > 5:
         for voice_channel in voice_channels:
             if voice_channel.name == "Bots only":
@@ -330,25 +295,19 @@ async def on_voice_state_update(member, before, after):
             voice_channel = await client.guilds[0].create_voice_channel("Bots only")
             vc = await voice_channel.connect()
             vc.play(discord.FFmpegPCMAudio(executable="/usr/bin/ffmpeg", source="robot_talk.mp3"))
-            # Sleep while audio is playing.
             while vc.is_playing():
                 time.sleep(.1)
 
             vc.play(discord.FFmpegPCMAudio(executable="/usr/bin/ffmpeg", source="robot_countdown.mp3"))
-            # Sleep while audio is playing.
             while vc.is_playing():
                 time.sleep(.1)
 
             vc.play(discord.FFmpegPCMAudio(executable="/usr/bin/ffmpeg", source="morse.mp3"))
-            # Sleep while audio is playing.
             while vc.is_playing():
                 time.sleep(.1)
 
             await vc.disconnect()
             await voice_channel.delete()
 
-
-    #channel = client.get_channel(message.channel_id)
-    #await channel.send('I saw a reaction!')
 
 client.run(TOKEN)
