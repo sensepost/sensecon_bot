@@ -18,7 +18,6 @@ import requests
 #   #   #     #  ### ##       #
 #   #   #     #      #        #
 #   #   #     #      #        #       token
-from requests.auth import HTTPBasicAuth
 
 TOKEN = 'NzY2Mzc0OTIzMTczODg4MDkw.X4icRA.ucegXvFx7TcGOm7o1E5OmWxRivs'
 
@@ -145,9 +144,7 @@ async def on_message(message):
                                     }
 
                                     r = requests.post('https://api.sconwar.com/api/player/register',
-                                                      auth=HTTPBasicAuth('sconwar', 'to-battle'),
-                                                      headers=headers,
-                                                      data={"name": member.name}, verify=False).json()
+                                                      headers=headers, data={"name": member.name}, verify=False).json()
 
                                     if "created" not in r:
                                         await message.author.send("welp, that failed.")
