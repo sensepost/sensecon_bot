@@ -1,6 +1,5 @@
 # Work with Python 3.6
 import discord
-import sqlite3
 import time
 from random import randint
 import mail
@@ -94,7 +93,7 @@ async def on_message(message):
                 if not verified_and_used:
                     otp = randint(10000, 99999)
                     mail.send_mail(emails[0],otp)
-                    await message.author.send("An email has been sent to {}".format(emails[0]))
+                    await message.author.send("An email has been sent to {}. Please submit your otp with the command `!otp`.".format(emails[0]))
                     users_code["data"].append(create_new_user(message.author.id, emails[0], otp))
                     save_state()
                 else:
@@ -213,6 +212,22 @@ async def on_ready():
     if not path.exists('morse.mp3') or not path.exists('robot_countdown.mp3') or not path.exists('robot_talk.mp3'):
         print('Audio files are missing for eavesdropper challenge.')
 
+
+    #set up lobby message.
+    channels = await client.guilds[0].fetch_channels()
+    for channel in channels:
+        if channel.name == 'lobby':
+            messages = await channel.history(limit=1000).flatten()
+            intro_exists = False
+            for message in messages:
+                if 'Welcome all to SenseCon 2020.' in message.content:
+                    intro_exists = True
+
+            if not intro_exists:
+                await channel.send('**Welcome all to SenseCon 2020.**\nBefore you can do anything please react to this message with the flag of the region you belong to.\nYour options are: :flag_no:, :flag_se:, :flag_za:, :flag_fr:, :flag_be:, :flag_gb: and :flag_ma:.\nBy reacting with the flag of a country a role will be assigned to you, this will help others know where you are from :D.')
+                await channel.send('Once you have reacted with the flag of your region, please verify yourself with me.\nSend me <@{}>, a direct message with `!verify` and an email address with @orangecyberdefense.com in it.'.format(client.user.id))
+                await channel.send('After verifying, you should have recieved a verified role and able to see all the channels on this server. If you have any issues, please ping either <@{}> or <@{}>'.format('398925835794645002','737218332628877342'))
+
     print('Logged in as')
     print(client.user.name)
     print(client.user.id)
@@ -228,7 +243,7 @@ async def on_raw_reaction_add(payload):
     channel = await client.fetch_channel(payload.channel_id)
     if channel.name == "lobby":
         message = await channel.fetch_message(payload.message_id)
-        if "welcome" in message.content:
+        if 'Welcome all to SenseCon 2020.' in message.content:
             for flag in emoji_to_role:
                 if payload.emoji.name.encode('utf8') == emoji_to_role[flag]:
                     for role in roles:
@@ -238,8 +253,6 @@ async def on_raw_reaction_add(payload):
                             await payload.member.add_roles(role)
 
 
-
-
 @client.event
 async def on_raw_reaction_remove(payload):
     roles = await client.guilds[0].fetch_roles()
@@ -247,7 +260,7 @@ async def on_raw_reaction_remove(payload):
     channel = await client.fetch_channel(payload.channel_id)
     if channel.name == "lobby":
         message = await channel.fetch_message(payload.message_id)
-        if "welcome" in message.content:
+        if "Welcome all to SenseCon 2020." in message.content:
             async for member in client.guilds[0].fetch_members():
                 if member.id == payload.user_id:
                     for flag in emoji_to_role:
@@ -275,17 +288,25 @@ async def on_raw_message_edit(payload):
 async def on_member_join(member):
     await member.send("Hello there fellow hacker! Could you please provide us with a @orangecyberdefense.com email address using `!verify` so we can verify you?")
 
-
 @client.event
 async def on_voice_state_update(member, before, after):
-    counter = 0
     voice_channels = client.guilds[0].voice_channels
+
+    exists = False
+    for voice_channel in voice_channels:
+        if voice_channel.name == "Bots only":
+            exists = True
+
+    if exists:
+        return
+
+    counter = 0
+    
     for voice_channel in voice_channels:
         if len(voice_channel.members) > 0:
             counter += 1
 
     voice_channel = None
-    exists = False
     if counter > 5:
         for voice_channel in voice_channels:
             if voice_channel.name == "Bots only":
@@ -306,6 +327,7 @@ async def on_voice_state_update(member, before, after):
             while vc.is_playing():
                 time.sleep(.1)
 
+            print('I reached this?')
             await vc.disconnect()
             await voice_channel.delete()
 
