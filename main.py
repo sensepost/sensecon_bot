@@ -154,6 +154,7 @@ async def on_message(message):
                     for role in roles:
                         if str(role) == "challenge:eavesdropper":
                             await member.add_roles(role)
+                            await anounce(member.id, role.id)
 
         elif message.content.startswith('!otp'.lower()):
             for user in users_code['data']:
@@ -166,6 +167,7 @@ async def on_message(message):
                                 for role in roles:
                                     if str(role) == "verified":
                                         await member.add_roles(role)
+                                        await anounce(member.id, role.id)
                                         user["verified"] = True
                                         save_state()
 
@@ -173,6 +175,7 @@ async def on_message(message):
                                     for role in roles:
                                         if str(role) == "challenge:hacker":
                                             await member.add_roles(role)
+                                            await anounce(member.id, role.id)
 
     elif message.content.startswith('!'):
         msg = 'Hello {0.author.mention}'.format(message)
@@ -214,7 +217,10 @@ async def on_message(message):
             for author in authors:
                 for role in roles:
                     if str(role) == "challenge:mexican wave":
-                        await member.add_roles(role)
+                        async for member in client.guilds[0].fetch_members():
+                            if author.id == member.id:
+                                await member.add_roles(role)
+                                await anounce(member.id, role.id)
 
 
 @client.event
@@ -266,8 +272,10 @@ async def on_raw_reaction_add(payload):
                     for role in roles:
                         if str(role) == flag:
                             await payload.member.add_roles(role)
+                            await anounce(payload.member.id, role.id)
                         if flag == 'computer' and str(role) == 'challenge:fuzzer':
                             await payload.member.add_roles(role)
+                            await anounce(payload.member.id, role.id)
 
 
 @client.event
@@ -298,6 +306,7 @@ async def on_raw_message_edit(payload):
             for role in roles:
                 if str(role) == "challenge:sneaky":
                     await member.add_roles(role)
+                    await anounce(member.id, role.id)
 
 
 @client.event
@@ -334,7 +343,7 @@ async def on_voice_state_update(member, before, after):
                 counter += 1
 
         voice_channel = None
-        if counter > 0:
+        if counter > 5:
             for voice_channel in voice_channels:
                 if voice_channel.name == "Bots only":
                     exists = True
@@ -359,6 +368,13 @@ async def on_voice_state_update(member, before, after):
                 await voice_channel.delete()
     finally:
         morse_challenge_lock.release()
+
+async def anounce(member, role):
+    channels = await client.guilds[0].fetch_channels()
+    for channel in channels:
+        if channel.name == 'roles' and isinstance(channel, discord.TextChannel):
+            await channel.send('<@{}> was assigned the role <@&{}>'.format(member, role))
+
 
 
 client.run(TOKEN)
