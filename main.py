@@ -114,59 +114,21 @@ async def on_message(message):
         elif message.content.startswith('!verify'.lower()) and not (
                 "@orangecyberdefense.com" in message.content.lower()):
             await message.author.send("Please provide an email address with @orangecyberdefense.com.")
+    
+        elif message.content.startswith('!submit'.lower()):
+            challenge_no = message.content.split(' ')[1]
+            for attachment in message.attachments:
+                if attachment.size > 300000:
+                    await message.author.send("The file attached to your submission is too big.")
+                else:
+                    file = await attachment.read(use_cached=False)
+                    text = file.decode("utf-8")
+                    print(text)
+
 
         # sconwar registration
         elif message.content.startswith('!sconwar register'.lower()):
-            async for member in client.guilds[0].fetch_members():
-                if member.id == message.author.id:
-                    verified = False
-                    for user_roles in member.roles:
-                        if user_roles.name == "verified":
-                            verified = True
-                            break
-
-                    if verified:
-
-                        for user in users_code['data']:
-                            if user["id"] == message.author.id:
-                                if not user["sconwar"] is None:
-                                    await member.send(
-                                        "You have already registered with sconwar. Your token is {}".format(
-                                            user["sconwar"]))
-                                    # maybe can store their sconwar uuid? and reply back if they forget/lose it?
-
-                                else:
-                                    await message.author.send("Please wait while we register you for sconwar :D")
-                                    # add code here to register for sconwar
-
-                                    # sconwar registration
-                                    headers = {
-                                        'accept': 'application/json',
-                                        'token': '9b0c3e10-26ea-48a5-8097-599b4824c35c',  # <-- sekret
-                                        'Content-Type': 'application/json',
-                                    }
-
-                                    r = requests.post('https://api.sconwar.com/api/player/register',
-                                                      headers=headers, json={
-                                                          "name": member.nick if member.nick else member.name
-                                                          }, verify=False).json()
-
-                                    if "created" not in r:
-                                        await message.author.send("welp, that failed.")
-                                        return
-
-                                    # To get name use - member.name
-                                    user["sconwar"] = r["uuid"]
-                                    save_state()
-
-                                    await message.author.send(
-                                        "You have been registered for sconwar, your token is {}.".format(
-                                            user["sconwar"]))
-
-                    else:
-                        await member.send(
-                            "Please verify your account first before registering for sconwar. To verify your account, send me a message with `!verify ` and your @orangecyberdefense.com email address so that I can send you an OTP.")
-
+            await register_sconwar(message)
 
         # if we recieve a DM from any user with the word beautiful then it means they eavesdropped on the Bots only chat, completing the one challenge :D
         elif "beautiful" in message.content.lower() or "bueatiful" in message.content.lower():
@@ -200,10 +162,10 @@ async def on_message(message):
                                             await member.add_roles(role)
                                             await anounce(member.id, role.id)
 
-    elif message.content.startswith('!'):
-        msg = 'Hello {0.author.mention}'.format(message)
-        channel = message.channel
-        await channel.send('Say hello!')
+    elif isinstance(message.channel, discord.TextChannel):
+        if message.channel.name == 'sconwar' and message.content.startswith('!sconwar register'):
+            await register_sconwar(message)
+
 
     else:
         counter = 0
@@ -245,6 +207,69 @@ async def on_message(message):
                                 await member.add_roles(role)
                                 await anounce(member.id, role.id)
 
+async def register_sconwar(message):
+    
+    async for member in client.guilds[0].fetch_members():
+        if member.id == message.author.id:
+            verified = False
+            for user_roles in member.roles:
+                if user_roles.name == "verified":
+                    verified = True
+                    break
+
+            if verified:
+
+                for user in users_code['data']:
+                    if user["id"] == message.author.id:
+                        if not user["sconwar"] is None:
+                            await member.send(
+                                "You have already registered with sconwar. Your token is {}.".format(
+                                    user["sconwar"]))
+                            # maybe can store their sconwar uuid? and reply back if they forget/lose it?
+                            if message.guild:
+                                await message.channel.send("<@{}> check your dms :D.".format(message.author.id))
+                        else:
+                            await message.author.send("Please wait while we register you for sconwar :D")
+                            # add code here to register for sconwar
+
+                            # sconwar registration
+                            headers = {
+                                'accept': 'application/json',
+                                'token': '9b0c3e10-26ea-48a5-8097-599b4824c35c',  # <-- sekret
+                                'Content-Type': 'application/json',
+                            }
+
+                            r = requests.post('https://api.sconwar.com/api/player/register',
+                                                headers=headers, json={
+                                                    "name": member.nick if member.nick else member.name
+                                                    }, verify=False)
+
+                            print(r.text)
+
+                            r = r.json()
+
+                            if "created" not in r:
+                                await message.author.send("welp, that failed.")
+                                return
+
+                            # To get name use - member.name
+                            user["sconwar"] = r["uuid"]
+                            save_state()
+
+                            await message.author.send(
+                                "You have been registered for sconwar, your token is {}.".format(
+                                    user["sconwar"]))
+                            if message.guild:
+                                await message.channel.send("<@{}> check your dms :D.".format(message.author.id))
+
+            else:
+                await member.send(
+                    "Please verify your account first before registering for sconwar. To verify your account, send me a message with `!verify ` and your @orangecyberdefense.com email address so that I can send you an OTP.")
+                if message.guild:
+                    await message.channel.send("<@{}> check your dms :D.".format(message.author.id))
+
+
+
 
 @client.event
 async def on_ready():
@@ -253,6 +278,8 @@ async def on_ready():
 
     if not path.exists('morse.mp3') or not path.exists('robot_countdown.mp3') or not path.exists('robot_talk.mp3'):
         print('Audio files are missing for eavesdropper challenge.')
+
+    #if path.exists('challenge_1') and path.exists('challenge_2') and path.exists('challenge_3'):
 
     # set up lobby message.
     channels = await client.guilds[0].fetch_channels()
@@ -401,6 +428,7 @@ async def on_member_update(before, after):
     for role in roles:
         if role.name == 'verified':
             users_code["data"].append(create_new_user(after.id, '', ''))
+            save_state()
 
 
 async def anounce(member, role):
