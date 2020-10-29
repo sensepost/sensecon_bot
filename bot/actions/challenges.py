@@ -36,6 +36,7 @@ class Sneaky(BaseAction):
 
             for role in roles:
                 if role.name == DiscordRoles.Sneaky:
+                    # todo: skip if the user already has the role
                     await member.add_roles(role)
                     await self.announce_role(member.id, role.id)
 

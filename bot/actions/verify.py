@@ -1,13 +1,33 @@
 import re
+import smtplib
+from email.mime.text import MIMEText
 from random import randint
 
-from loguru import logger
 from pony import orm
 from pony.orm import desc
 
 from .base import BaseAction, EventType
+from ..config import *
 from ..discordoptions import EmojiRoleMap, DiscordRoles
 from ..models import User
+
+
+def send_mail(to_address, code):
+    mail_server = smtplib.SMTP(EMAIL_SMTP, 587)
+    mail_server.ehlo()
+    mail_server.starttls()
+    mail_server.login(EMAIL_USER, EMAIL_PASS)
+
+    msg = MIMEText(
+        f'Please send a direct message to the bot with !otp and '
+        f'the following code to complete the registration. Code: {code}'
+    )
+    msg['Subject'] = "SenseCon Discord OTP code"
+    msg['From'] = f"SenseCon Discord Server <{EMAIL_FROM}>"
+    msg['To'] = to_address
+
+    mail_server.sendmail(f'{EMAIL_FROM}', to_address, msg.as_string())
+    mail_server.quit()
 
 
 class Verify(BaseAction):
@@ -73,6 +93,7 @@ class Verify(BaseAction):
                 )
 
                 # todo: send email
+                send_mail(user.email, )
 
                 await self.message.author.send(f'An email with an OTP has been sent to {user.email}.\n'
                                                f'Tell me what you got with `!otp <otp>` now.')
