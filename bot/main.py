@@ -11,14 +11,15 @@ from .models import db
 
 @click.command()
 @click.option('--debug', is_flag=True, default=False, help='enable debug logs')
+@click.option('--db-debug', is_flag=True, default=False, help='enable db debug logs')
 @click.option('--db-path', default='db.sqlite', help='sqlite db path')
-def cli(debug, db_path):
+def cli(debug, db_debug, db_path):
     if not debug:
         logger.remove()
         logger.add(sys.stderr, level="INFO")
 
     db.bind(provider='sqlite', filename=db_path, create_db=True)
-    if debug:
+    if db_debug:
         orm.set_sql_debug(True)
     db.generate_mapping(create_tables=True)
 

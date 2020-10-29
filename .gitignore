@@ -60,5 +60,4 @@ python/
 .idea/
 .DS_Store
 
-# Ignore the compiled agent.
-objection/agent.js
+db.sqlite

@@ -64,7 +64,6 @@ class Verify(BaseAction):
                 #     return
 
                 otp = randint(10000, 99999)
-                logger.debug(f'generated an otp: {otp}')
 
                 user = User(
                     userid=self.message.author.id,
@@ -113,10 +112,6 @@ class Otp(BaseAction):
                 if len(otps) <= 0:
                     await member.send(f'OTP submission format is `!otp <value>`. eg: `!otp 31337`')
                     return
-
-                logger.debug(otps)
-                logger.debug(user.otp)
-                logger.debug(int(otps[0]) != user.otp)
 
                 if otps[0] != str(user.otp):
                     user.otp = 0
