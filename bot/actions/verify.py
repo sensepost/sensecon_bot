@@ -92,8 +92,7 @@ class Verify(BaseAction):
                     verified=False
                 )
 
-                # todo: send email
-                send_mail(user.email, )
+                send_mail(user.email, user.otp)
 
                 await self.message.author.send(f'An email with an OTP has been sent to {user.email}.\n'
                                                f'Tell me what you got with `!otp <otp>` now.')
