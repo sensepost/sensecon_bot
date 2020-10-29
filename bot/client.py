@@ -31,6 +31,8 @@ class Client(object):
             :param action:
             :return:
         """
+
+        logger.debug(f'registering action {action}')
         self.actions.append(action)
 
     @staticmethod
