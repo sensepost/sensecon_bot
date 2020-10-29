@@ -1,11 +1,9 @@
-FROM linuxserver/ffmpeg:latest
-
-RUN apt update && apt install -y python3-pip
+FROM python:3.8-buster
 
 RUN export DEBIAN_FRONTEND=noninteractive \
   && apt-get update \
   && apt-get install -y --no-install-recommends \
-    python3-pip \
+    ffmpeg \
   && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
@@ -13,4 +11,4 @@ ADD . /app
 
 RUN pip3 install -r requirements.txt
 
-ENTRYPOINT [ "python3", "./main.py" ]
+ENTRYPOINT [ "python3", "-m", "bot.main", "--db-path", "/db.sqlite", "--debug" ]
