@@ -201,15 +201,11 @@ class MexicanWave(BaseAction):
         self.lock.acquire()
 
         try:
-            for role in await self.client.guilds[0].fetch_roles():
-                if role.name != DiscordRoles.MexicanWave:
-                    continue
+            async for member in self.client.guilds[0].fetch_members():
+                for author in authors:
+                    if author.id != member.id:
+                        continue
 
-                async for member in self.client.guilds[0].fetch_members():
-                    for author in authors:
-                        if author.id != member.id:
-                            continue
-
-                        await self.grant_member_role(member, DiscordRoles.MexicanWave)
+                    await self.grant_member_role(member, DiscordRoles.MexicanWave)
         finally:
             self.lock.release()
