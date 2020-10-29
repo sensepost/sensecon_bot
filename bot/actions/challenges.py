@@ -206,17 +206,6 @@ class MexicanWave(BaseAction):
                     continue
 
                 async for member in self.client.guilds[0].fetch_members():
-
-                    # lets not spam folks that already have mexican waves.
-
-                    has_role = False
-                    for m_role in member.roles:
-                        if m_role.name == DiscordRoles.MexicanWave:
-                            has_role = True
-
-                    if has_role:
-                        continue
-
                     for author in authors:
                         if author.id != member.id:
                             continue
