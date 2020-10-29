@@ -35,9 +35,6 @@ class Sneaky(BaseAction):
 
             await self.grant_member_role(member, DiscordRoles.Sneaky)
 
-                    #todo: check that we arent spamming
-
-
 class EavesDropper(BaseAction):
     """
         Trigger the bot playing a Morse message in its own channel.
