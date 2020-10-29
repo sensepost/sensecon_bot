@@ -46,6 +46,8 @@ class CountryFlagAdd(BaseAction):
                 await member.add_roles(role)
                 await self.announce_role(member.id, role.id)
 
+                #todo: need to add fuzzer challenge here and also remove the reaction.
+
 
 class CountryFlagRemove(BaseAction):
     """

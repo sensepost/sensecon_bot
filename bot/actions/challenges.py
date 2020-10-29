@@ -39,6 +39,8 @@ class Sneaky(BaseAction):
                     await member.add_roles(role)
                     await self.announce_role(member.id, role.id)
 
+                    #todo: check that we arent spamming
+
 
 class EavesDropper(BaseAction):
     """
