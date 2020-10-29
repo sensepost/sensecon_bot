@@ -1,13 +1,34 @@
 import re
+import smtplib
+from email.mime.text import MIMEText
 from random import randint
 
-from loguru import logger
 from pony import orm
 from pony.orm import desc
+from  loguru import logger
 
 from .base import BaseAction, EventType
+from ..config import *
 from ..discordoptions import EmojiRoleMap, DiscordRoles
 from ..models import User
+
+
+def send_mail(to_address, code):
+    mail_server = smtplib.SMTP(EMAIL_SMTP, 587)
+    mail_server.ehlo()
+    mail_server.starttls()
+    mail_server.login(EMAIL_USER, EMAIL_PASS)
+
+    msg = MIMEText(
+        f'Please send a direct message to the bot with !otp and '
+        f'the following code to complete the registration. Code: {code}'
+    )
+    msg['Subject'] = "SenseCon Discord OTP code"
+    msg['From'] = f"SenseCon Discord Server <{EMAIL_FROM}>"
+    msg['To'] = to_address
+
+    mail_server.sendmail(f'{EMAIL_FROM}', to_address, msg.as_string())
+    mail_server.quit()
 
 
 class Verify(BaseAction):
@@ -23,7 +44,7 @@ class Verify(BaseAction):
         return True
 
     def match(self) -> bool:
-        return self.message.content.startswith('!verify'.lower())
+        return self.message.content.startswith('!verify')
 
     async def execute(self):
         if '@orangecyberdefense.com' not in self.message.content.lower():
@@ -57,14 +78,13 @@ class Verify(BaseAction):
                 return
 
             with orm.db_session:
-                user = User.select(lambda u: u.userid == self.message.author.id).first()
+                # user = User.select(lambda u: u.userid == self.message.author.id).first()
                 #
                 # if user and user.verified:
                 #     await member.send(f'You have already registered with email: {user.email}')
                 #     return
 
                 otp = randint(10000, 99999)
-                logger.debug(f'generated an otp: {otp}')
 
                 user = User(
                     userid=self.message.author.id,
@@ -73,7 +93,8 @@ class Verify(BaseAction):
                     verified=False
                 )
 
-                # todo: send email
+                logger.info(f'sending an email to {user.email}')
+                send_mail(user.email, user.otp)
 
                 await self.message.author.send(f'An email with an OTP has been sent to {user.email}.\n'
                                                f'Tell me what you got with `!otp <otp>` now.')
@@ -94,7 +115,7 @@ class Otp(BaseAction):
         return True
 
     def match(self) -> bool:
-        return self.message.content.startswith('!otp'.lower())
+        return self.message.content.startswith('!otp')
 
     async def execute(self):
         # loop guild members to id the sender
@@ -114,30 +135,20 @@ class Otp(BaseAction):
                     await member.send(f'OTP submission format is `!otp <value>`. eg: `!otp 31337`')
                     return
 
-                logger.debug(otps)
-                logger.debug(user.otp)
-                logger.debug(int(otps[0]) != user.otp)
-
                 if otps[0] != str(user.otp):
                     user.otp = 0
-                    await member.send(f'Incorrect OTP, sorry. Please verify again (we just unset it in the backend).')
+                    await member.send(f'Incorrect OTP, sorry. Please verify again '
+                                      f'(we just unset the one you had in the backend, no bruting, sorry).')
                     return
 
                 # update the db as a verified user
                 user.otp = 0
                 user.verified = True
 
-                roles = await self.client.guilds[0].fetch_roles()
-                for role in roles:
-                    if role.name == DiscordRoles.Verified:
-                        await member.add_roles(role)
-                        await self.announce_role(member.id, role.id)
-                        await member.send('You have been verified.')
+                await self.grant_member_role(member, DiscordRoles.Verified, announce=False)
+                await member.send('You have been verified.')
 
                 # this is a challenge :P
 
                 if '@orangecyberdefense.com' not in user.email:
-                    for role in roles:
-                        if role.name == DiscordRoles.Hacker:
-                            await member.add_roles(role)
-                            await self.announce_role(member.id, role.id)
+                    await self.grant_member_role(member, DiscordRoles.Hacker)

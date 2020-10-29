@@ -24,7 +24,6 @@ class Sneaky(BaseAction):
         return True
 
     async def execute(self):
-        roles = await self.client.guilds[0].fetch_roles()
         channel = await self.client.fetch_channel(self.payload.channel_id)
         message = await channel.fetch_message(self.payload.message_id)
 
@@ -34,10 +33,7 @@ class Sneaky(BaseAction):
             if member.id != user.id:
                 continue
 
-            for role in roles:
-                if role.name == DiscordRoles.Sneaky:
-                    await member.add_roles(role)
-                    await self.announce_role(member.id, role.id)
+            await self.grant_member_role(member, DiscordRoles.Sneaky)
 
                     #todo: check that we arent spamming
 
@@ -94,7 +90,7 @@ class EavesDropper(BaseAction):
                 if len(voice_channel.members) > 0:
                     counter += 1
 
-            if counter > 1:
+            if counter > 5:
                 for voice_channel in voice_channels:
                     if voice_channel.name == DiscordChannels.BotsOnly:
                         exists = True
@@ -141,14 +137,12 @@ class Beautiful(BaseAction):
         return 'beautiful' in self.message.content.lower() and self.message.guild is None
 
     async def execute(self):
-        roles = await self.client.guilds[0].fetch_roles()
+
         async for member in self.client.guilds[0].fetch_members():
             if member.id != self.message.author.id:
                 continue
-            for role in roles:
-                if role.name == DiscordRoles.Eavesdropper:
-                    await member.add_roles(role)
-                    await self.announce_role(member.id, role.id)
+
+            await self.grant_member_role(member, DiscordRoles.Eavesdropper)
 
 
 class MexicanWave(BaseAction):
@@ -208,27 +202,11 @@ class MexicanWave(BaseAction):
         self.lock.acquire()
 
         try:
-            for role in await self.client.guilds[0].fetch_roles():
-                if role.name != DiscordRoles.MexicanWave:
-                    continue
-
-                async for member in self.client.guilds[0].fetch_members():
-
-                    # lets not spam folks that already have mexican waves.
-
-                    has_role = False
-                    for m_role in member.roles:
-                        if m_role.name == DiscordRoles.MexicanWave:
-                            has_role = True
-
-                    if has_role:
+            async for member in self.client.guilds[0].fetch_members():
+                for author in authors:
+                    if author.id != member.id:
                         continue
 
-                    for author in authors:
-                        if author.id != member.id:
-                            continue
-
-                        await member.add_roles(role)
-                        await self.announce_role(member.id, role.id)
+                    await self.grant_member_role(member, DiscordRoles.MexicanWave)
         finally:
             self.lock.release()

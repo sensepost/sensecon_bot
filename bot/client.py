@@ -41,7 +41,6 @@ class Client(object):
             :return:
         """
 
-        logger.info("booting the bot")
         dc.run(TOKEN)
 
     async def run_actions(self, event: EventType, **kwargs):
@@ -67,10 +66,11 @@ class Client(object):
             if not action.match():
                 continue
 
-            logger.debug(f'we matched the {action} action for event {event}')
+            logger.info(f'matched the {action} action for event {event}')
             await action.execute()
 
             if action.should_stop():
+                logger.debug(f'should stop triggered for action {action}')
                 break
 
 

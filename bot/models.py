@@ -1,4 +1,4 @@
-from pony.orm import Database, Required
+from pony.orm import Database, Required, Optional
 
 db = Database()
 
@@ -12,6 +12,7 @@ class User(db.Entity):
     email = Required(str, index=True)
     otp = Required(int)
     verified = Required(bool)
+    sconwar_token = Optional("Sconwar")
 
 
 class Sconwar(db.Entity):
@@ -19,5 +20,5 @@ class Sconwar(db.Entity):
         Sconwar token storage
     """
 
-    userid = Required(int, size=64, index=True)
+    user = Required(User)
     token = Required(str)

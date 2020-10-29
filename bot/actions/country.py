@@ -42,9 +42,9 @@ class CountryFlagAdd(BaseAction):
                 if role.name != EmojiRoleMap[self.payload.emoji.name]:
                     continue
 
+                # don't use self.grant_.. as the role mapping is odd here.
                 logger.debug(f'granting a user the {self.payload.emoji.name} role')
                 await member.add_roles(role)
-                await self.announce_role(member.id, role.id)
 
                 #todo: need to add fuzzer challenge here and also remove the reaction.
 
