@@ -11,4 +11,4 @@ ADD . /app
 
 RUN pip3 install -r requirements.txt
 
-ENTRYPOINT [ "python3", "-m", "bot.main", "--db-path", "/db.sqlite", "--debug" ]
+ENTRYPOINT [ "python3", "-m", "bot.main", "--db-path", "/db.sqlite" ]

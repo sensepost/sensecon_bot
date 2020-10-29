@@ -85,7 +85,7 @@ class BaseAction(ABC):
                 has_role = True
 
         if has_role:
-            logger.debug(f'{member.nick if member.nick else member.display_name} already has the {role} role')
+            logger.info(f'{member.nick if member.nick else member.display_name} already has the {role} role')
             return
 
         discord_roles = await self.client.guilds[0].fetch_roles()

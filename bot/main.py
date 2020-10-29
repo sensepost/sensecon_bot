@@ -18,11 +18,13 @@ def cli(debug, db_debug, db_path):
         logger.remove()
         logger.add(sys.stderr, level="INFO")
 
+    logger.info('preparing database config')
     db.bind(provider='sqlite', filename=db_path, create_db=True)
     if db_debug:
         orm.set_sql_debug(True)
     db.generate_mapping(create_tables=True)
 
+    logger.info('loading actions')
     client.add_action(challenges.MexicanWave())
     client.add_action(challenges.Sneaky())
     client.add_action(challenges.Beautiful())
@@ -34,6 +36,7 @@ def cli(debug, db_debug, db_path):
     client.add_action(verify.Verify())
     client.add_action(verify.Otp())
 
+    logger.info('booting bot')
     client.run()
 
 

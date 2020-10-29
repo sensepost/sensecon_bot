@@ -24,7 +24,6 @@ class Sneaky(BaseAction):
         return True
 
     async def execute(self):
-        roles = await self.client.guilds[0].fetch_roles()
         channel = await self.client.fetch_channel(self.payload.channel_id)
         message = await channel.fetch_message(self.payload.message_id)
 
