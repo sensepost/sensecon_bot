@@ -4,7 +4,7 @@ from pony import orm
 
 from .base import BaseAction, EventType
 from ..config import SCONWAR_TOKEN
-from ..models import Sconwar as SconwarModel
+from ..models import User, Sconwar as SconwarToken
 
 
 class Sconwar(BaseAction):
@@ -19,7 +19,7 @@ class Sconwar(BaseAction):
         return EventType.Message
 
     def match(self) -> bool:
-        return self.message.content.startswith('!sconwar register'.lower())
+        return self.message.content.startswith('!sconwar register')
 
     async def execute(self):
         # loop guild members to id the sender
@@ -31,15 +31,21 @@ class Sconwar(BaseAction):
                 return
 
             with orm.db_session:
-                user = SconwarModel.select(lambda c: c.userid == self.message.author.id).first()
+                user = User.select(lambda c: c.userid == self.message.author.id).first()
 
-                if user:  # we have a user, return the known token
-                    await member.send(f'You have already registered for Sconwar! Your token is: {user.token}')
+                if not user:
+                    logger.warning(f'user {member.nick if member.nick else member.display_name} tried to '
+                                   f'register for sconwar before verifying (no db user)')
+                    await member.send(f'make sure you have verified first before we do anything, please.')
+                    return
+
+                if user.sconwar_token:
+                    await member.send(f'You have already registered for Sconwar! Your token is: `{user.sconwar_token.token}`')
                     if self.message.guild:
                         await self.message.channel.send(f'<@{self.message.author.id}> check your dms')
                     return
 
-                # we need a token, get and store it.
+                logger.info('getting a new player token from sconwar')
 
                 headers = {
                     'accept': 'application/json',
@@ -56,11 +62,9 @@ class Sconwar(BaseAction):
                     await member.send(f'failed to get you a token. ask an admin to help!')
                     return
 
-                user = SconwarModel(
-                    userid=self.message.author.id,
-                    token=r['uuid']
-                )
+                SconwarToken(user=user, token=r['uuid'])
 
-                await member.send(f'Welcome to Sconwar! Your player token is (keep it safe): {user.token}')
+                await member.send(
+                    f'Welcome to Sconwar! Your player token is (keep it safe): `{user.sconwar_token.token}`')
                 if self.message.guild:
                     await self.message.channel.send(f'<@{self.message.author.id}> check your dms')

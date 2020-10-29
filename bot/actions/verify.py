@@ -5,6 +5,7 @@ from random import randint
 
 from pony import orm
 from pony.orm import desc
+from  loguru import logger
 
 from .base import BaseAction, EventType
 from ..config import *
@@ -43,7 +44,7 @@ class Verify(BaseAction):
         return True
 
     def match(self) -> bool:
-        return self.message.content.startswith('!verify'.lower())
+        return self.message.content.startswith('!verify')
 
     async def execute(self):
         if '@orangecyberdefense.com' not in self.message.content.lower():
@@ -92,6 +93,7 @@ class Verify(BaseAction):
                     verified=False
                 )
 
+                logger.info(f'sending an email to {user.email}')
                 send_mail(user.email, user.otp)
 
                 await self.message.author.send(f'An email with an OTP has been sent to {user.email}.\n'
@@ -113,7 +115,7 @@ class Otp(BaseAction):
         return True
 
     def match(self) -> bool:
-        return self.message.content.startswith('!otp'.lower())
+        return self.message.content.startswith('!otp')
 
     async def execute(self):
         # loop guild members to id the sender
