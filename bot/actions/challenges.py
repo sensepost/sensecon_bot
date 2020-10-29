@@ -34,11 +34,7 @@ class Sneaky(BaseAction):
             if member.id != user.id:
                 continue
 
-            for role in roles:
-                if role.name == DiscordRoles.Sneaky:
-                    # todo: skip if the user already has the role
-                    await member.add_roles(role)
-                    await self.announce_role(member.id, role.id)
+            await self.grant_member_role(member, DiscordRoles.Sneaky)
 
 
 class EavesDropper(BaseAction):
@@ -140,14 +136,12 @@ class Beautiful(BaseAction):
         return 'beautiful' in self.message.content.lower() and self.message.guild is None
 
     async def execute(self):
-        roles = await self.client.guilds[0].fetch_roles()
+
         async for member in self.client.guilds[0].fetch_members():
             if member.id != self.message.author.id:
                 continue
-            for role in roles:
-                if role.name == DiscordRoles.Eavesdropper:
-                    await member.add_roles(role)
-                    await self.announce_role(member.id, role.id)
+
+            await self.grant_member_role(member, DiscordRoles.Eavesdropper)
 
 
 class MexicanWave(BaseAction):
@@ -227,7 +221,6 @@ class MexicanWave(BaseAction):
                         if author.id != member.id:
                             continue
 
-                        await member.add_roles(role)
-                        await self.announce_role(member.id, role.id)
+                        await self.grant_member_role(member, DiscordRoles.MexicanWave)
         finally:
             self.lock.release()

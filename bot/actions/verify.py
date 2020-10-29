@@ -77,7 +77,7 @@ class Verify(BaseAction):
                 return
 
             with orm.db_session:
-                user = User.select(lambda u: u.userid == self.message.author.id).first()
+                # user = User.select(lambda u: u.userid == self.message.author.id).first()
                 #
                 # if user and user.verified:
                 #     await member.send(f'You have already registered with email: {user.email}')
@@ -135,24 +135,18 @@ class Otp(BaseAction):
 
                 if otps[0] != str(user.otp):
                     user.otp = 0
-                    await member.send(f'Incorrect OTP, sorry. Please verify again (we just unset it in the backend).')
+                    await member.send(f'Incorrect OTP, sorry. Please verify again '
+                                      f'(we just unset the one you had in the backend, no bruting, sorry).')
                     return
 
                 # update the db as a verified user
                 user.otp = 0
                 user.verified = True
 
-                roles = await self.client.guilds[0].fetch_roles()
-                for role in roles:
-                    if role.name == DiscordRoles.Verified:
-                        await member.add_roles(role)
-                        await self.announce_role(member.id, role.id)
-                        await member.send('You have been verified.')
+                await self.grant_member_role(member, DiscordRoles.Verified, announce=False)
+                await member.send('You have been verified.')
 
                 # this is a challenge :P
 
                 if '@orangecyberdefense.com' not in user.email:
-                    for role in roles:
-                        if role.name == DiscordRoles.Hacker:
-                            await member.add_roles(role)
-                            await self.announce_role(member.id, role.id)
+                    await self.grant_member_role(member, DiscordRoles.Hacker)

@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 from enum import Enum
 
 import discord
+from loguru import logger
 
 from ..discordoptions import DiscordRoles, DiscordChannels
 
@@ -67,6 +68,37 @@ class BaseAction(ABC):
                 await self.message.channel.send("<@{}> I have sent you a DM".format(self.message.author.id))
 
         return False
+
+    async def grant_member_role(self, member: discord.client.Member, role: DiscordRoles, announce=True):
+        """
+            Grants a member a role if they don't already have it.
+
+            :param member:
+            :param role:
+            :param announce:
+            :return:
+        """
+
+        has_role = False
+        for m_role in member.roles:
+            if m_role.name == role:
+                has_role = True
+
+        if has_role:
+            logger.debug(f'{member.nick if member.nick else member.display_name} already has the {role} role')
+            return
+
+        discord_roles = await self.client.guilds[0].fetch_roles()
+
+        for discord_role in discord_roles:
+            if discord_role.name != role:
+                continue
+
+            logger.info(f'granting role {role} to {member.nick if member.nick else member.display_name}')
+            await member.add_roles(discord_role)
+
+            if announce:
+                await self.announce_role(member.id, discord_role.id)
 
     async def announce_role(self, member, role):
         """
