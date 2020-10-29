@@ -1,7 +1,7 @@
 from loguru import logger
 
 from .base import BaseAction, EventType
-from ..discordoptions import DiscordChannels, EmojiRoleMap
+from ..discordoptions import DiscordChannels, EmojiRoleMap, DiscordRoles
 
 
 class CountryFlagAdd(BaseAction):
@@ -45,6 +45,10 @@ class CountryFlagAdd(BaseAction):
                 # don't use self.grant_.. as the role mapping is odd here.
                 logger.debug(f'granting a user the {self.payload.emoji.name} role')
                 await member.add_roles(role)
+
+            if 'computer' == EmojiRoleMap[self.payload.emoji.name]:
+                await self.grant_member_role(member, DiscordRoles.Fuzzer, announce=True)
+                await message.remove_reaction(self.payload.emoji.name, member)
 
                 #todo: need to add fuzzer challenge here and also remove the reaction.
 

@@ -20,6 +20,8 @@ class DiscordRoles:
     Eavesdropper = "challenge:eavesdropper"
     Hacker = "challenge:hacker"
     MexicanWave = "challenge:mexican wave"
+    Lazy = "lazy"
+    Fuzzer = "challenge:fuzzer"
 
 
 @dataclass

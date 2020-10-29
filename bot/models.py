@@ -19,7 +19,7 @@ class User(db.Entity):
     sconwar_token = Optional("Sconwar")
 
     # password challenge
-    password_score_log = Optional("PasswordScoreLog")
+    password_score_log = Set("PasswordScoreLog")
     passwords_cracked = Set("Password")
 
 
@@ -50,6 +50,6 @@ class PasswordScoreLog(db.Entity):
 
     user = Required(User)
     # password = Set(Password)
-    clear = Required(str)
+    cleartext = Required(str)
     points = Required(int)
     submitted = Required(datetime, default=datetime.utcnow())
