@@ -122,12 +122,6 @@ class PasswordUpload(PasswordChallengeBase):
 
             attachment = self.message.attachments[0]
             if attachment.size > 200000:
-                # todo: think about this one
-
-                # with orm.db_session:
-                #    user = select(s for s in User if s.userid == member.id).first()
-                #    user.points = -5000
-
                 await self.message.author.send(
                     f'Woah buddy, how about you go crack it yourself. Maybe we should take away 5000 points from your '
                     f'score.')

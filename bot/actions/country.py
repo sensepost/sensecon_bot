@@ -50,8 +50,6 @@ class CountryFlagAdd(BaseAction):
                 await self.grant_member_role(member, DiscordRoles.Fuzzer, announce=True)
                 await message.remove_reaction(self.payload.emoji.name, member)
 
-                #todo: need to add fuzzer challenge here and also remove the reaction.
-
 
 class CountryFlagRemove(BaseAction):
     """
