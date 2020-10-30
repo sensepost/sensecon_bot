@@ -13,19 +13,58 @@ from ..discordoptions import DiscordRoles
 from ..models import Password, User, PasswordScoreLog
 
 
-class PasswordUpload(BaseAction):
+class PasswordChallengeBase(BaseAction):
+
+    challenges: []
+
+    def __init__(self):
+        self.challenges = [1, 2, 3]
+
+    @staticmethod
+    def get_points(user):
+        with orm.db_session:
+            counter = 0
+            points_logged = select(l for l in PasswordScoreLog if l.user == user)
+
+            for point in points_logged:
+                counter += point.points
+
+            return counter
+
+    @staticmethod
+    def password_challenge_path(f: int, t: str):
+        """
+
+        """
+        return Path(__file__).resolve(). \
+            parent.parent.parent.joinpath('passwordchal').joinpath(f'{str(f)}_{t}.txt')
+
+    def event_type(self) -> EventType:
+        return EventType.Message
+
+    def should_stop(self) -> bool:
+        return False
+
+    def match(self) -> bool:
+        pass
+
+    async def execute(self):
+        pass
+
+
+class PasswordUpload(PasswordChallengeBase):
     """
         Handles password answer uploads
     """
 
     default_score: int
-    challenges: []
 
     def __init__(self):
-
-        self.challenges = [1, 2, 3]
+        super(PasswordChallengeBase, self).__init__()
         self.default_score = 100
+        self.seed_db()
 
+    def seed_db(self):
         with orm.db_session:
             if count(p for p in Password) > 0:
                 return
@@ -36,22 +75,14 @@ class PasswordUpload(BaseAction):
         for challenge in self.challenges:
             logger.debug(f'processing challenge {challenge}')
             with orm.db_session:
-                with open(self.password_challenge_clears_path(challenge), 'r') as f:
+                with open(self.password_challenge_path(challenge, 'clears'), 'r') as f:
                     for line in f:
                         Password(challenge=challenge, cleartext=line, value=challenge * self.default_score)
 
         logger.info('done populating passwords tables with challenge sets')
 
-    @staticmethod
-    def password_challenge_clears_path(f: int):
-        return Path(__file__).resolve(). \
-            parent.parent.parent.joinpath('passwordchal').joinpath(f'{str(f)}_clears.txt')
 
-    def event_type(self) -> EventType:
-        return EventType.Message
 
-    def should_stop(self) -> bool:
-        return False
 
     def match(self) -> bool:
         return self.message.content.startswith('!submit')
@@ -113,17 +144,6 @@ class PasswordUpload(BaseAction):
                         f'Your submission has been processed, you now have {self.get_points(user)} points.')
 
     @staticmethod
-    def get_points(user):
-        with orm.db_session:
-            counter = 0
-            points_logged = select(l for l in PasswordScoreLog if l.user == user)
-
-            for point in points_logged:
-                counter += point.points
-
-            return counter
-
-    @staticmethod
     def remove_duplicates(user, challenge, submission):
 
         submitted_correct_passwords = []
@@ -161,16 +181,13 @@ class PasswordUpload(BaseAction):
                 user.passwords_cracked.add(password)
 
 
-class PasswordScore(BaseAction):
+class PasswordScore(PasswordChallengeBase):
     """
         Let someone know how many points they have so far.
     """
 
-    def event_type(self) -> EventType:
-        return EventType.Message
-
-    def should_stop(self) -> bool:
-        return False
+    def __init__(self):
+        super(PasswordChallengeBase, self).__init__()
 
     def match(self) -> bool:
         return self.message.content.startswith('!score')
@@ -183,73 +200,19 @@ class PasswordScore(BaseAction):
             if not await self.is_verified(member):
                 return
 
-            if "debug" not in self.message.content:
-                with orm.db_session:
-                    user = select(s for s in User if s.userid == member.id).first()
-
-                    await self.message.author.send(f'You have {self.get_points(user)} points.')
-                return
-
             with orm.db_session:
                 user = select(s for s in User if s.userid == member.id).first()
 
-                logs = select(l for l in PasswordScoreLog if l.user == user)
-
-                file = io.StringIO()
-
-                output = []
-
-                for log in logs:
-                    output.append(f'You got {log.points} for the submission of {log.cleartext}')
-
-                # todo: fix me
-
-                file.write('\n'.join(x for x in output))
-
-                await self.message.author.send(content=f'You have {self.get_points(user)} points.', file=discord.File(file, filename='logs.txt'))
-
-                file.close()
+                await self.message.author.send(f'You have {self.get_points(user)} points.')
 
 
-
-
-    # todo: another dupe from above class.
-
-    @staticmethod
-    def get_points(user):
-        with orm.db_session:
-            counter = 0
-            points_logged = select(l for l in PasswordScoreLog if l.user == user)
-
-            for point in points_logged:
-                counter += point.points
-
-            return counter
-
-
-class PasswordDownload(BaseAction):
+class PasswordDownload(PasswordChallengeBase):
     """
         Let someone know how many points they have so far.
     """
 
-    # todo: there is a much better way to do this. code repeated in PasswordUpload as well. sorry leon!
-
-    challenges: []
-
     def __init__(self):
-
-        self.challenges = [1, 2, 3]
-
-    @staticmethod
-    def password_challenge_hashes_path(f: int):
-        return Path(__file__).resolve(). \
-            parent.parent.parent.joinpath('passwordchal').joinpath(f'{str(f)}_hashes.txt')
-
-    def event_type(self) -> EventType:
-        return EventType.Message
-
-    def should_stop(self) -> bool:
-        return False
+        super(PasswordChallengeBase, self).__init__()
 
     def match(self) -> bool:
         return self.message.content.startswith('!download')
@@ -275,4 +238,4 @@ class PasswordDownload(BaseAction):
             return
 
         await self.message.author.send(content='Happy cracking!',
-                                       file=discord.File(self.password_challenge_hashes_path(int(challenge_number))))
+                                       file=discord.File(self.password_challenge_path(int(challenge_number), 'hashes')))
