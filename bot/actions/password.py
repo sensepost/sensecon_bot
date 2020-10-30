@@ -1,12 +1,11 @@
-from pathlib import Path
 import re
-import io
+from pathlib import Path
 
+import discord
 from loguru import logger
 from pony import orm
 from pony.orm import count
 from pony.orm import select
-import discord
 
 from bot.actions.base import BaseAction, EventType
 from ..discordoptions import DiscordRoles
@@ -14,6 +13,9 @@ from ..models import Password, User, PasswordScoreLog
 
 
 class PasswordChallengeBase(BaseAction):
+    """
+        A base password challenge class
+    """
 
     challenges: []
 
@@ -34,8 +36,13 @@ class PasswordChallengeBase(BaseAction):
     @staticmethod
     def password_challenge_path(f: int, t: str):
         """
+            Reads a challenge file from the password challenge path.
 
+            :param f:str the file to read
+            :param t:str the challenge type to read
+            :return:
         """
+
         return Path(__file__).resolve(). \
             parent.parent.parent.joinpath('passwordchal').joinpath(f'{str(f)}_{t}.txt')
 
@@ -60,7 +67,7 @@ class PasswordUpload(PasswordChallengeBase):
     default_score: int
 
     def __init__(self):
-        super(PasswordChallengeBase, self).__init__()
+        super().__init__()
         self.default_score = 100
         self.seed_db()
 
@@ -80,9 +87,6 @@ class PasswordUpload(PasswordChallengeBase):
                         Password(challenge=challenge, cleartext=line, value=challenge * self.default_score)
 
         logger.info('done populating passwords tables with challenge sets')
-
-
-
 
     def match(self) -> bool:
         return self.message.content.startswith('!submit')
@@ -118,30 +122,29 @@ class PasswordUpload(PasswordChallengeBase):
 
             attachment = self.message.attachments[0]
             if attachment.size > 200000:
+                # todo: think about this one
 
-                #todo: think about this one
-
-                #with orm.db_session:
+                # with orm.db_session:
                 #    user = select(s for s in User if s.userid == member.id).first()
                 #    user.points = -5000
 
                 await self.message.author.send(
                     f'Woah buddy, how about you go crack it yourself. Also, we took away 5000 points from your score.')
                 await self.grant_member_role(member, DiscordRoles.Lazy, announce=True)
+                return
 
-            else:
-                file = await attachment.read(use_cached=False)
-                submission_file = file.decode("utf-8")
-                submission = submission_file.splitlines()
+            file = await attachment.read(use_cached=False)
+            submission_file = file.decode("utf-8")
+            submission = submission_file.splitlines()
 
-                new_submission = self.remove_duplicates(member.id, int(challenge_number), submission)
-                self.check_and_score(member.id, challenge_number, new_submission)
+            new_submission = self.remove_duplicates(member.id, int(challenge_number), submission)
+            self.check_and_score(member.id, challenge_number, new_submission)
 
-                with orm.db_session:
-                    user = select(s for s in User if s.userid == member.id).first()
+            with orm.db_session:
+                user = select(s for s in User if s.userid == member.id).first()
 
-                    await self.message.author.send(
-                        f'Your submission has been processed, you now have {self.get_points(user)} points.')
+                await self.message.author.send(
+                    f'Your submission has been processed, you now have {self.get_points(user)} points.')
 
     @staticmethod
     def remove_duplicates(user, challenge, submission):
@@ -158,7 +161,6 @@ class PasswordUpload(PasswordChallengeBase):
                 submitted_correct_passwords.append(password.cleartext)
 
             # remove any of the passwords we have already cracked
-
             return set(set(submission) - set(submitted_correct_passwords))
 
     @staticmethod
@@ -187,7 +189,7 @@ class PasswordScore(PasswordChallengeBase):
     """
 
     def __init__(self):
-        super(PasswordChallengeBase, self).__init__()
+        super().__init__()
 
     def match(self) -> bool:
         return self.message.content.startswith('!score')
@@ -212,7 +214,7 @@ class PasswordDownload(PasswordChallengeBase):
     """
 
     def __init__(self):
-        super(PasswordChallengeBase, self).__init__()
+        super().__init__()
 
     def match(self) -> bool:
         return self.message.content.startswith('!download')
