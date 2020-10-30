@@ -129,7 +129,8 @@ class PasswordUpload(PasswordChallengeBase):
                 #    user.points = -5000
 
                 await self.message.author.send(
-                    f'Woah buddy, how about you go crack it yourself. Also, we took away 5000 points from your score.')
+                    f'Woah buddy, how about you go crack it yourself. Maybe we should take away 5000 points from your '
+                    f'score.')
                 await self.grant_member_role(member, DiscordRoles.Lazy, announce=True)
                 return
 
