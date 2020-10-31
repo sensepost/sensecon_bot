@@ -4,19 +4,28 @@ from .base import BaseAction, EventType
 from ..discordoptions import DiscordChannels, EmojiRoleMap, DiscordRoles
 
 
-class CountryFlagAdd(BaseAction):
-    """
-        CountryFlag adds a country related role based on an emoji reaction
-    """
+class CountryFlag(BaseAction):
 
     def event_type(self) -> EventType:
-        return EventType.RawReactionAdd
+        pass
 
     def should_stop(self) -> bool:
         return False
 
     def match(self) -> bool:
         return True
+
+    async def execute(self):
+        pass
+
+
+class CountryFlagAdd(CountryFlag):
+    """
+        CountryFlag adds a country related role based on an emoji reaction
+    """
+
+    def event_type(self) -> EventType:
+        return EventType.RawReactionAdd
 
     async def execute(self):
         roles = await self.client.guilds[0].fetch_roles()
@@ -57,19 +66,13 @@ class CountryFlagAdd(BaseAction):
                 await self.grant_member_role(member, DiscordRoles.Fuzzer, announce=True)
 
 
-class CountryFlagRemove(BaseAction):
+class CountryFlagRemove(CountryFlag):
     """
         Removes a role when the country flag reaction is removed
     """
 
     def event_type(self) -> EventType:
         return EventType.RawReactionRemove
-
-    def should_stop(self) -> bool:
-        return False
-
-    def match(self) -> bool:
-        return True
 
     async def execute(self):
         roles = await self.client.guilds[0].fetch_roles()
