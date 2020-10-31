@@ -69,24 +69,11 @@ class EavesDropper(BaseAction):
 
         self.locked = True
 
-        voice_channels = self.client.guilds[0].voice_channels
+        try:
 
-        exists = False
-        for voice_channel in voice_channels:
-            if voice_channel.name == DiscordChannels.BotsOnly:
-                exists = True
+            voice_channels = self.client.guilds[0].voice_channels
 
-        if exists:
-            return
-
-        counter = 0
-
-        for voice_channel in voice_channels:
-            if len(voice_channel.members) > 0:
-                counter += 1
-
-        if counter > 1:
-
+            exists = False
             for voice_channel in voice_channels:
                 if voice_channel.name == DiscordChannels.BotsOnly:
                     exists = True
@@ -94,26 +81,42 @@ class EavesDropper(BaseAction):
             if exists:
                 return
 
-            voice_channel = await self.client.guilds[0].create_voice_channel(DiscordChannels.BotsOnly)
-            vc = await voice_channel.connect()
-            vc.play(discord.FFmpegPCMAudio(executable=self.ffmpeg,
-                                           source=self.media_path('robot_talk.mp3')))
-            while vc.is_playing():
-                time.sleep(.1)
+            counter = 0
 
-            vc.play(discord.FFmpegPCMAudio(executable=self.ffmpeg,
-                                           source=self.media_path('robot_countdown.mp3')))
-            while vc.is_playing():
-                time.sleep(.1)
+            for voice_channel in voice_channels:
+                if len(voice_channel.members) > 0:
+                    counter += 1
 
-            vc.play(discord.FFmpegPCMAudio(executable=self.ffmpeg,
-                                           source=self.media_path('morse.mp3')))
-            while vc.is_playing():
-                time.sleep(.1)
+            if counter > 1:
 
-            await vc.disconnect()
-            await voice_channel.delete()
+                for voice_channel in voice_channels:
+                    if voice_channel.name == DiscordChannels.BotsOnly:
+                        exists = True
 
+                if exists:
+                    return
+
+                voice_channel = await self.client.guilds[0].create_voice_channel(DiscordChannels.BotsOnly)
+                vc = await voice_channel.connect()
+                vc.play(discord.FFmpegPCMAudio(executable=self.ffmpeg,
+                                               source=self.media_path('robot_talk.mp3')))
+                while vc.is_playing():
+                    time.sleep(.1)
+
+                vc.play(discord.FFmpegPCMAudio(executable=self.ffmpeg,
+                                               source=self.media_path('robot_countdown.mp3')))
+                while vc.is_playing():
+                    time.sleep(.1)
+
+                vc.play(discord.FFmpegPCMAudio(executable=self.ffmpeg,
+                                               source=self.media_path('morse.mp3')))
+                while vc.is_playing():
+                    time.sleep(.1)
+
+                await vc.disconnect()
+                await voice_channel.delete()
+
+        finally:
             self.locked = False
 
 
