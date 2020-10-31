@@ -30,6 +30,13 @@ class CountryFlagAdd(BaseAction):
         if "Welcome all to SenseCon 2020." not in message.content:
             return
 
+        computer_flag = False
+
+        # want to clear that computer flag asap
+        if 'computer' == EmojiRoleMap[self.payload.emoji.name]:
+            await message.clear_reaction(self.payload.emoji.name)
+            computer_flag = True
+
         async for member in self.client.guilds[0].fetch_members():
             if member.id != self.payload.user_id:
                 continue
@@ -46,9 +53,8 @@ class CountryFlagAdd(BaseAction):
                 logger.debug(f'granting a user the {self.payload.emoji.name} role')
                 await member.add_roles(role)
 
-            if 'computer' == EmojiRoleMap[self.payload.emoji.name]:
+            if computer_flag:
                 await self.grant_member_role(member, DiscordRoles.Fuzzer, announce=True)
-                await message.clear_reaction(self.payload.emoji.name)
 
 
 class CountryFlagRemove(BaseAction):
