@@ -1,4 +1,5 @@
 from typing import List
+import copy
 
 import discord
 from loguru import logger
@@ -64,7 +65,7 @@ class Client(object):
             if a.event_type() != event:
                 continue
 
-            action = a
+            action = copy.deepcopy(a)
 
             action.set_context(client=c, message=m, payload=p)
             if not action.match():

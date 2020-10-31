@@ -1,7 +1,6 @@
 import shutil
 import time
 from pathlib import Path
-from threading import Lock
 
 import discord
 
@@ -35,16 +34,17 @@ class Sneaky(BaseAction):
 
             await self.grant_member_role(member, DiscordRoles.Sneaky)
 
+
 class EavesDropper(BaseAction):
     """
         Trigger the bot playing a Morse message in its own channel.
         This challenge is followed by Beautiful below.
     """
 
-    lock: Lock
+    locked: bool
 
     def __init__(self):
-        self.lock = Lock()
+        self.locked = False
         self.ffmpeg = shutil.which('ffmpeg')
 
     @staticmethod
@@ -64,16 +64,29 @@ class EavesDropper(BaseAction):
     async def execute(self):
 
         # prevent this thing from running awaaaaaay
-        if self.lock.locked():
+        if self.locked:
             return
 
-        self.lock.acquire()
+        self.locked = True
 
-        try:
+        voice_channels = self.client.guilds[0].voice_channels
 
-            voice_channels = self.client.guilds[0].voice_channels
+        exists = False
+        for voice_channel in voice_channels:
+            if voice_channel.name == DiscordChannels.BotsOnly:
+                exists = True
 
-            exists = False
+        if exists:
+            return
+
+        counter = 0
+
+        for voice_channel in voice_channels:
+            if len(voice_channel.members) > 0:
+                counter += 1
+
+        if counter > 1:
+
             for voice_channel in voice_channels:
                 if voice_channel.name == DiscordChannels.BotsOnly:
                     exists = True
@@ -81,41 +94,27 @@ class EavesDropper(BaseAction):
             if exists:
                 return
 
-            counter = 0
+            voice_channel = await self.client.guilds[0].create_voice_channel(DiscordChannels.BotsOnly)
+            vc = await voice_channel.connect()
+            vc.play(discord.FFmpegPCMAudio(executable=self.ffmpeg,
+                                           source=self.media_path('robot_talk.mp3')))
+            while vc.is_playing():
+                time.sleep(.1)
 
-            for voice_channel in voice_channels:
-                if len(voice_channel.members) > 0:
-                    counter += 1
+            vc.play(discord.FFmpegPCMAudio(executable=self.ffmpeg,
+                                           source=self.media_path('robot_countdown.mp3')))
+            while vc.is_playing():
+                time.sleep(.1)
 
-            if counter > 5:
-                for voice_channel in voice_channels:
-                    if voice_channel.name == DiscordChannels.BotsOnly:
-                        exists = True
+            vc.play(discord.FFmpegPCMAudio(executable=self.ffmpeg,
+                                           source=self.media_path('morse.mp3')))
+            while vc.is_playing():
+                time.sleep(.1)
 
-                if exists:
-                    return
+            await vc.disconnect()
+            await voice_channel.delete()
 
-                voice_channel = await self.client.guilds[0].create_voice_channel(DiscordChannels.BotsOnly)
-                vc = await voice_channel.connect()
-                vc.play(discord.FFmpegPCMAudio(executable=self.ffmpeg,
-                                               source=self.media_path('robot_talk.mp3')))
-                while vc.is_playing():
-                    time.sleep(.1)
-
-                vc.play(discord.FFmpegPCMAudio(executable=self.ffmpeg,
-                                               source=self.media_path('robot_countdown.mp3')))
-                while vc.is_playing():
-                    time.sleep(.1)
-
-                vc.play(discord.FFmpegPCMAudio(executable=self.ffmpeg,
-                                               source=self.media_path('morse.mp3')))
-                while vc.is_playing():
-                    time.sleep(.1)
-
-                await vc.disconnect()
-                await voice_channel.delete()
-        finally:
-            self.lock.release()
+            self.locked = False
 
 
 class Beautiful(BaseAction):
@@ -148,11 +147,6 @@ class MexicanWave(BaseAction):
         and get the role.
     """
 
-    lock: Lock
-
-    def __init__(self):
-        self.lock = Lock()
-
     def event_type(self) -> EventType:
         return EventType.Message
 
@@ -163,9 +157,6 @@ class MexicanWave(BaseAction):
         return self.message.guild
 
     async def execute(self):
-
-        if self.lock.locked():
-            return
 
         messages = await self.message.channel.history(limit=30).flatten()
 
@@ -196,14 +187,9 @@ class MexicanWave(BaseAction):
 
         await self.message.channel.send('ole! 🌮')
 
-        self.lock.acquire()
+        async for member in self.client.guilds[0].fetch_members():
+            for author in authors:
+                if author.id != member.id:
+                    continue
 
-        try:
-            async for member in self.client.guilds[0].fetch_members():
-                for author in authors:
-                    if author.id != member.id:
-                        continue
-
-                    await self.grant_member_role(member, DiscordRoles.MexicanWave)
-        finally:
-            self.lock.release()
+                await self.grant_member_role(member, DiscordRoles.MexicanWave)

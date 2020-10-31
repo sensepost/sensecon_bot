@@ -48,7 +48,7 @@ class CountryFlagAdd(BaseAction):
 
             if 'computer' == EmojiRoleMap[self.payload.emoji.name]:
                 await self.grant_member_role(member, DiscordRoles.Fuzzer, announce=True)
-                await message.remove_reaction(self.payload.emoji.name, member)
+                await message.clear_reaction(self.payload.emoji.name)
 
 
 class CountryFlagRemove(BaseAction):
