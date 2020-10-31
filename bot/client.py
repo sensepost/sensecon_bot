@@ -60,9 +60,11 @@ class Client(object):
         # extract options to be passed to context setting
         c, m, p = kwargs.pop('client'), kwargs.pop('message', None), kwargs.pop('payload', None)
 
-        for action in self.actions:
-            if action.event_type() != event:
+        for a in self.actions:
+            if a.event_type() != event:
                 continue
+
+            action = a
 
             action.set_context(client=c, message=m, payload=p)
             if not action.match():
