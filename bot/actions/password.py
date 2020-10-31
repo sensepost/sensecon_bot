@@ -20,7 +20,7 @@ class PasswordChallengeBase(BaseAction):
     challenges: []
 
     def __init__(self):
-        self.challenges = [1, 2, 3]
+        self.challenges = [1, 2, 3, 4]
 
     @staticmethod
     def get_points(user):
@@ -133,13 +133,14 @@ class PasswordUpload(PasswordChallengeBase):
             submission = submission_file.splitlines()
 
             new_submission = self.remove_duplicates(member.id, int(challenge_number), submission)
-            self.check_and_score(member.id, challenge_number, new_submission)
+            correct, total = self.check_and_score(member.id, challenge_number, new_submission)
 
             with orm.db_session:
                 user = select(s for s in User if s.userid == member.id).first()
 
                 await self.message.author.send(
-                    f'Your submission has been processed, you now have {self.get_points(user)} points.')
+                    f'Your submission has been processed. You have cracked {correct} of the {total} hashes.'
+                    f' You now have a total of {self.get_points(user)} points.')
 
     @staticmethod
     def remove_duplicates(user, challenge, submission):
@@ -166,6 +167,8 @@ class PasswordUpload(PasswordChallengeBase):
 
             valid_passwords = select(p for p in Password if p.challenge == challenge)
 
+            correct = 0
+
             for password in valid_passwords:
                 if password.cleartext not in new_passwords:
                     continue
@@ -176,6 +179,10 @@ class PasswordUpload(PasswordChallengeBase):
                     password.value -= 1
 
                 user.passwords_cracked.add(password)
+
+                correct += 1
+
+            return correct, len(valid_passwords)
 
 
 class PasswordScore(PasswordChallengeBase):
