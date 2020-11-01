@@ -96,10 +96,6 @@ class ClearChatChannel(Admin):
 
     async def execute(self):
 
-        # ignore non DMs
-        if self.message.guild is not None:
-            return
-
         async for member in self.client.guilds[0].fetch_members():
             if member.id != self.message.author.id:
                 continue
@@ -107,6 +103,11 @@ class ClearChatChannel(Admin):
             # ignore non admins
             if not await self.member_has_role(member, DiscordRoles.Admin):
                 await member.send('you are not an admin it seems')
+                return
+
+            if self.message.guild is not None:
+                await self.message.channel.purge()
+                logger.info(f'purged channel: {self.message.channel.name}')
                 return
 
             channel_parts = self.message.content.split(' ')[1].split('.')
