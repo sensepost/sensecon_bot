@@ -43,6 +43,7 @@ def cli(debug, db_debug, db_path):
     client.add_action(verify.Otp())
 
     client.add_action(admin.SendMessage())
+    client.add_action(admin.ClearChatChannel())
 
     logger.info('booting bot')
     client.run()

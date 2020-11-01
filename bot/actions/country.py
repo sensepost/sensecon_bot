@@ -36,7 +36,7 @@ class CountryFlagAdd(CountryFlag):
 
         message = await channel.fetch_message(self.payload.message_id)
 
-        if "Welcome all to SenseCon 2020." not in message.content:
+        if "Welcome to SenseCon 2020" not in message.content:
             return
 
         computer_flag = False
@@ -83,7 +83,7 @@ class CountryFlagRemove(CountryFlag):
 
         message = await channel.fetch_message(self.payload.message_id)
 
-        if "Welcome all to SenseCon 2020." not in message.content:
+        if "Welcome to SenseCon 2020" not in message.content:
             return
 
         async for member in self.client.guilds[0].fetch_members():
