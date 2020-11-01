@@ -40,7 +40,8 @@ class Sconwar(BaseAction):
                     return
 
                 if user.sconwar_token:
-                    await member.send(f'You have already registered for Sconwar! Your token is: `{user.sconwar_token.token}`')
+                    await member.send(
+                        f'You have already registered for Sconwar! Your token is: `{user.sconwar_token.token}`')
                     if self.message.guild:
                         await self.message.channel.send(f'<@{self.message.author.id}> check your dms')
                     return

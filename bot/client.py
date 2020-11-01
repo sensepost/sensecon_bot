@@ -1,5 +1,5 @@
-from typing import List
 import copy
+from typing import List
 
 import discord
 from loguru import logger

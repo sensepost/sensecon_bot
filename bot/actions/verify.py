@@ -3,9 +3,9 @@ import smtplib
 from email.mime.text import MIMEText
 from random import randint
 
+from loguru import logger
 from pony import orm
 from pony.orm import desc
-from  loguru import logger
 
 from .base import BaseAction, EventType
 from ..config import *
