@@ -4,7 +4,7 @@ import click
 from loguru import logger
 from pony import orm
 
-from .actions import sconwar, country, challenges, verify, password
+from .actions import sconwar, country, challenges, verify, password, admin
 from .client import client
 from .models import db
 
@@ -29,15 +29,20 @@ def cli(debug, db_debug, db_path):
     client.add_action(challenges.Sneaky())
     client.add_action(challenges.Beautiful())
     client.add_action(challenges.EavesDropper())
+
     client.add_action(password.PasswordDownload())
     client.add_action(password.PasswordUpload())
     client.add_action(password.PasswordScore())
+
     client.add_action(country.CountryFlagAdd())
     client.add_action(country.CountryFlagRemove())
 
     client.add_action(sconwar.Sconwar())
+
     client.add_action(verify.Verify())
     client.add_action(verify.Otp())
+
+    client.add_action(admin.SendMessage())
 
     logger.info('booting bot')
     client.run()

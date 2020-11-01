@@ -69,6 +69,37 @@ class BaseAction(ABC):
 
         return False
 
+    @staticmethod
+    async def member_has_role(member: discord.client.Member, role: DiscordRoles):
+        """
+            Check's if a member has a Role
+
+            :param member:
+            :param role:
+            :return:
+        """
+
+        for m_role in member.roles:
+            if m_role.name == role:
+                return True
+
+        return False
+
+    async def send_channel_message(self, message: str, channel: DiscordChannels):
+        """
+            Send a message to a channel.
+
+            :param message:
+            :param channel:
+            :return:
+        """
+
+        for ch in await self.client.guilds[0].fetch_channels():
+            if ch.name != channel or not isinstance(ch, discord.TextChannel):
+                continue
+
+            await ch.send(f'{message}')
+
     async def grant_member_role(self, member: discord.client.Member, role: DiscordRoles, announce=True):
         """
             Grants a member a role if they don't already have it.
@@ -109,11 +140,7 @@ class BaseAction(ABC):
             :return:
         """
 
-        for channel in await self.client.guilds[0].fetch_channels():
-            if channel.name != DiscordChannels.Roles or not isinstance(channel, discord.TextChannel):
-                continue
-
-            await channel.send(f'<@{member}> just got the <@&{role}> role!')
+        await self.send_channel_message(f'<@{member}> just got the <@&{role}> role!', DiscordChannels.Roles)
 
     @abstractmethod
     def event_type(self) -> EventType:
