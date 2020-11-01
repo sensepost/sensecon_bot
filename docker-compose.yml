@@ -1,6 +1,11 @@
 version: "3.8"
+
 services:
-  discord:
+  discord-bot:
     build: .
+    image: discord-bot:local
+    container_name: discord-bot
     volumes:
-        - .:/app
+      - "./db.sqlite:/db.sqlite"
+    restart: unless-stopped
+    
