@@ -6,9 +6,8 @@ RUN export DEBIAN_FRONTEND=noninteractive \
     ffmpeg \
   && rm -rf /var/lib/apt/lists/*
 
-WORKDIR /app
 ADD . /app
 
-RUN pip3 install -r requirements.txt
+RUN cd /app && pip3 install .
 
-ENTRYPOINT [ "python3", "-m", "bot.main", "--db-path", "/db.sqlite" ]
+ENTRYPOINT [ "discord-bot", "--db-path", "/db.sqlite" ]
