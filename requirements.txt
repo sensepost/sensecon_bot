@@ -5,3 +5,4 @@ requests
 loguru==0.4.1
 click==7.1.1
 pony==0.7.12
+python-dotenv==0.15.0

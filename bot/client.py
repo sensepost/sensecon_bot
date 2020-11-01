@@ -5,7 +5,7 @@ import discord
 from loguru import logger
 
 from .actions.base import BaseAction, EventType
-from .config import TOKEN
+from .config import DISCORD_TOKEN
 
 intents = discord.Intents.default()
 intents.members = True
@@ -44,7 +44,7 @@ class Client(object):
             :return:
         """
 
-        dc.run(TOKEN)
+        dc.run(DISCORD_TOKEN)
 
     async def run_actions(self, event: EventType, **kwargs):
         """

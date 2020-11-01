@@ -1,7 +1,13 @@
-TOKEN = 'NzY2Mzc0OTIzMTczODg4MDkw.X4icRA.ucegXvFx7TcGOm7o1E5OmWxRivs'
-SCONWAR_TOKEN = '9b0c3e10-26ea-48a5-8097-599b4824c35c'
+import os
 
-EMAIL_SMTP = 'email-smtp.eu-west-1.amazonaws.com'
-EMAIL_USER = 'x'
-EMAIL_PASS = 'x'
-EMAIL_FROM = 'sensecon@uk.orangecyberdefense.com'
+from dotenv import load_dotenv, find_dotenv
+
+load_dotenv(find_dotenv())
+
+DISCORD_TOKEN = os.getenv('DISCORD_TOKEN')
+SCONWAR_TOKEN = os.getenv('SCONWAR_TOKEN')
+
+EMAIL_SMTP = os.getenv('EMAIL_SMTP')
+EMAIL_USER = os.getenv('EMAIL_USER')
+EMAIL_PASS = os.getenv('EMAIL_PASS')
+EMAIL_FROM = os.getenv('EMAIL_FROM')

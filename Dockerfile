@@ -8,6 +8,9 @@ RUN export DEBIAN_FRONTEND=noninteractive \
 
 ADD . /app
 
-RUN cd /app && pip3 install .
+RUN cd /app && \
+    # remove a .env that could accidently still be in the project dir
+    rm .env && \
+    pip3 install .
 
 ENTRYPOINT [ "discord-bot", "--db-path", "/db.sqlite" ]

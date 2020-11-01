@@ -5,6 +5,8 @@ services:
     build: .
     image: discord-bot:local
     container_name: discord-bot
+    env_file:
+      - .env
     volumes:
       - "./db.sqlite:/db.sqlite"
     restart: unless-stopped
