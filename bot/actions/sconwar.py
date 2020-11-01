@@ -4,6 +4,7 @@ from pony import orm
 
 from .base import BaseAction, EventType
 from ..config import SCONWAR_TOKEN
+from ..discordoptions import DiscordChannels
 from ..models import User, Sconwar as SconwarToken
 
 
@@ -65,7 +66,9 @@ class Sconwar(BaseAction):
 
                 SconwarToken(user=user, token=r['uuid'])
 
-                await member.send(
-                    f'Welcome to Sconwar! Your player token is (keep it safe): `{user.sconwar_token.token}`')
+                await member.send(f'Welcome to Sconwar! Your player token is '
+                                  f'(keep it safe): `{user.sconwar_token.token}`')
+                await self.send_channel_message(f'Look out! <@{self.message.author.id}> has joined sconwar!',
+                                                DiscordChannels.Sconwar)
                 if self.message.guild:
                     await self.message.channel.send(f'<@{self.message.author.id}> check your dms')

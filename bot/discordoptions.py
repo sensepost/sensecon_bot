@@ -1,4 +1,4 @@
-from dataclasses import dataclass, fields
+from dataclasses import dataclass
 
 EmojiRoleMap = {
     '🇳🇴': "norway",
@@ -31,8 +31,4 @@ class DiscordChannels:
     Roles = "roles"
     BotsOnly = "Bots only"
     General = "general"
-
-    def key_by_name(self, n):
-        for field in fields(self):
-            if field.value == n:
-                return field.name
+    Sconwar = "sconwar"
