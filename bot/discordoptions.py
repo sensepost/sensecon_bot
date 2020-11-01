@@ -32,3 +32,4 @@ class DiscordChannels:
     BotsOnly = "Bots only"
     General = "general"
     Sconwar = "sconwar"
+    Password = "password"

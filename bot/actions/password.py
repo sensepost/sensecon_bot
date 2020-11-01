@@ -8,7 +8,7 @@ from pony.orm import count
 from pony.orm import select
 
 from bot.actions.base import BaseAction, EventType
-from ..discordoptions import DiscordRoles
+from ..discordoptions import DiscordRoles, DiscordChannels
 from ..models import Password, User, PasswordScoreLog
 
 
@@ -141,6 +141,12 @@ class PasswordUpload(PasswordChallengeBase):
                 await self.message.author.send(
                     f'Your submission has been processed. You have cracked {correct} of the {total} hashes.'
                     f' You now have a total of {self.get_points(user)} points.')
+
+                if correct == 0:
+                    return
+
+                await self.send_channel_message(f'<@{self.message.author.id}> just submitted {correct} passwords!',
+                                                DiscordChannels.Sconwar)
 
     @staticmethod
     def remove_duplicates(user, challenge, submission):
