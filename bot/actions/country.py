@@ -42,9 +42,10 @@ class CountryFlagAdd(CountryFlag):
         computer_flag = False
 
         # want to clear that computer flag asap
-        if 'computer' == EmojiRoleMap[self.payload.emoji.name]:
-            await message.clear_reaction(self.payload.emoji.name)
-            computer_flag = True
+        if self.payload.emoji.name in EmojiRoleMap:
+            if 'computer' == EmojiRoleMap[self.payload.emoji.name]:
+                await message.clear_reaction(self.payload.emoji.name)
+                computer_flag = True
 
         async for member in self.client.guilds[0].fetch_members():
             if member.id != self.payload.user_id:
