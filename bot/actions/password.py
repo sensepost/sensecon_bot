@@ -146,7 +146,7 @@ class PasswordUpload(PasswordChallengeBase):
                     return
 
                 await self.send_channel_message(f'<@{self.message.author.id}> just submitted {correct} passwords!',
-                                                DiscordChannels.Sconwar)
+                                                DiscordChannels.Password)
 
     @staticmethod
     def remove_duplicates(user, challenge, submission):
