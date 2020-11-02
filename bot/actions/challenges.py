@@ -87,7 +87,7 @@ class EavesDropper(BaseAction):
                 if len(voice_channel.members) > 0:
                     counter += 1
 
-            if counter > 1:
+            if counter > 5:
 
                 for voice_channel in voice_channels:
                     if voice_channel.name == DiscordChannels.BotsOnly:
