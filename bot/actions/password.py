@@ -210,10 +210,35 @@ class PasswordScore(PasswordChallengeBase):
             if not await self.is_verified(member):
                 return
 
-            with orm.db_session:
-                user = select(s for s in User if s.userid == member.id).first()
+            if 'leaderboard' not in self.message.content:
+                with orm.db_session:
+                    user = select(s for s in User if s.userid == member.id).first()
 
-                await self.message.author.send(f'You have {self.get_points(user)} points.')
+                    await self.message.author.send(f'You have {self.get_points(user)} points.')
+
+                    return
+
+            with orm.db_session:
+                users = select(u for u in User)
+
+                scores = {}
+
+                for user in users:
+                    score = self.get_points(user)
+
+                    if score == 0:
+                        continue
+
+                    scores[user.userid] = score
+
+                scores = {k: v for k, v in sorted(scores.items(), key=lambda item: item[1], reverse=True)}
+
+                string_message = ''
+
+                for user_id in scores.keys():
+                    string_message += f'<@{user_id}> has {scores[user_id]} points for all challenges\n'
+
+                await self.send_channel_message(f'{string_message}', DiscordChannels.Password)
 
 
 class PasswordDownload(PasswordChallengeBase):
