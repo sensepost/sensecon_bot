@@ -110,7 +110,7 @@ class PasswordUpload(PasswordChallengeBase):
             challenge_numbers = re.findall(r'\b\d+\b', self.message.content)
 
             if len(challenge_numbers) <= 0:
-                await self.message.author.send(f'Submit command format is `!download <value>` together with an '
+                await self.message.author.send(f'Submit command format is `!submit <value>` together with an '
                                                f'attachment. eg: `!submit 1`')
                 return
 
