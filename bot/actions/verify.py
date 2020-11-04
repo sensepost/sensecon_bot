@@ -150,5 +150,5 @@ class Otp(BaseAction):
 
                 # this is a challenge :P
 
-                if '@orangecyberdefense.com' not in user.email:
+                if not user.email.endswith('@orangecyberdefense.com'):
                     await self.grant_member_role(member, DiscordRoles.Hacker)

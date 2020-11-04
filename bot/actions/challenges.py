@@ -3,6 +3,7 @@ import time
 from pathlib import Path
 
 import discord
+from loguru import logger
 
 from .base import BaseAction, EventType
 from ..discordoptions import DiscordRoles, DiscordChannels
@@ -28,6 +29,14 @@ class Sneaky(BaseAction):
         message = await channel.fetch_message(self.payload.message_id)
 
         if message.guild is None:
+            # logger.debug(f'message edit event fired: {message}')
+            # logger.debug(f'message edit event fired: {message.content}')
+            # for embed in message.embeds:
+            #    logger.debug(
+            #        f'message embedded with : type - {embed.type}, desc - {embed.description}, title {embed.title}')
+            return
+
+        if message.embeds:
             return
 
         user = message.author
