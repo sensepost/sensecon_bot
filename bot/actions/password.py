@@ -218,27 +218,66 @@ class PasswordScore(PasswordChallengeBase):
 
                     return
 
-            with orm.db_session:
-                users = select(u for u in User)
+            if 'points' in self.message.content:
+                with orm.db_session:
+                    users = select(u for u in User)
 
-                scores = {}
+                    scores = {}
 
-                for user in users:
-                    score = self.get_points(user)
+                    for user in users:
+                        score = self.get_points(user)
 
-                    if score == 0:
-                        continue
+                        if score == 0:
+                            continue
 
-                    scores[user.userid] = score
+                        scores[user.userid] = score
 
-                scores = {k: v for k, v in sorted(scores.items(), key=lambda item: item[1], reverse=True)}
+                    scores = {k: v for k, v in sorted(scores.items(), key=lambda item: item[1], reverse=True)}
 
-                string_message = ''
+                    string_message = ''
 
-                for user_id in scores.keys():
-                    string_message += f'<@{user_id}> has {scores[user_id]} points for all challenges\n'
+                    for user_id in scores.keys():
+                        string_message += f'<@{user_id}> has {scores[user_id]} points for all challenges\n'
 
-                await self.send_channel_message(f'{string_message}', DiscordChannels.Password)
+                    await self.send_channel_message(f'{string_message}', DiscordChannels.Password)
+                    return
+
+            if 'challenges' in self.message.content:
+                with orm.db_session:
+                    users = select(u for u in User)
+
+                    challenge_counts = []
+
+                    for challenge_no in self.challenges:
+                        challenge_counts.append(count(p for p in Password if p.challenge == challenge_no))
+
+                    challenge_submissions = {}
+
+                    for user in users:
+
+                        if len(user.passwords_cracked) < 1:
+                            continue
+
+                        challenge_submission = {}
+
+                        for challenge_no in self.challenges:
+                            challenge_submission_count = count(p for u in User
+                                                               for p in u.passwords_cracked
+                                                               if u == user and p.challenge == challenge_no)
+                            challenge_submission[challenge_no] = challenge_submission_count
+
+                        challenge_submissions[user.userid] = challenge_submission
+
+                    string_message = ''
+
+                    for user_id in challenge_submissions.keys():
+                        string_message += f'user <@{user_id}> has cracked:\n'
+                        for challenge_no in self.challenges:
+                            string_message += f'challenge {challenge_no} - {challenge_submissions[user_id][challenge_no]}' \
+                                              f'/{challenge_counts[challenge_no-1]}\n'
+
+                    await self.send_channel_message(f'{string_message}', DiscordChannels.Password)
+                    return
 
 
 class PasswordDownload(PasswordChallengeBase):
