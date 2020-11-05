@@ -271,7 +271,7 @@ class PasswordScore(PasswordChallengeBase):
                     string_message = ''
 
                     for user_id in challenge_submissions.keys():
-                        string_message += f'user <@{user_id}> has cracked:\n'
+                        string_message += f'<@{user_id}> has cracked:\n'
                         for challenge_no in self.challenges:
                             string_message += f'challenge {challenge_no} - {challenge_submissions[user_id][challenge_no]}' \
                                               f'/{challenge_counts[challenge_no-1]}\n'

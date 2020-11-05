@@ -30,20 +30,26 @@ class BaseAction(ABC):
     payload: discord.RawReactionActionEvent
     client: discord.client.Client
     message: discord.message.Message
+    before: discord.VoiceState
+    after: discord.VoiceState
 
-    def set_context(self, client=None, message=None, payload=None):
+    def set_context(self, client=None, message=None, payload=None, before=None, after=None):
         """
             Sets the context used for the execute method (typically)
 
             :param client:
             :param message:
             :param payload:
+            :param before:
+            :param after:
             :return:
         """
 
         self.client = client
         self.message = message
         self.payload = payload
+        self.before = before
+        self.after = after
 
     async def is_verified(self, member: discord.guild.Member, alert=False) -> bool:
         """

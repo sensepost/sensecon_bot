@@ -76,23 +76,86 @@ class EavesDropper(BaseAction):
 
     async def execute(self):
 
+        logger.debug(f'noticed voice state change before {self.before} - {self.before.channel}')
+        logger.debug(f'noticed voice state change after {self.after} - {self.after.channel}')
+
         # prevent this thing from running awaaaaaay
         if self.locked:
             return
 
-        self.locked = True
+        #if not self.before.channel and self.before.channel.name is DiscordChannels.BotsOnly:
+        #    return
+
+        #if not hasattr(self.after, 'channel') or not hasattr(self.before, 'channel'):
+        #    return
+
+        if not hasattr(self.after.channel, 'name') or not hasattr(self.before.channel, 'name'):
+            return
+
+        if self.before.channel.name in DiscordChannels.BotsOnly:
+            return
+
+        if self.after.channel.name not in DiscordChannels.BotsOnly:
+            return
+
+        voice_channels = self.client.guilds[0].voice_channels
 
         try:
 
-            voice_channels = self.client.guilds[0].voice_channels
-
-            exists = False
             for voice_channel in voice_channels:
-                if voice_channel.name == DiscordChannels.BotsOnly:
-                    exists = True
+                if voice_channel.name != DiscordChannels.BotsOnly:
+                    continue
 
-            if exists:
-                return
+                for member in voice_channel.members:
+                    if self.client.user.id == member.id:
+                        return
+
+                if self.locked:
+                    return
+
+                self.locked = True
+
+                time.sleep(3)
+
+                vc = await voice_channel.connect()
+                vc.play(discord.FFmpegPCMAudio(executable=self.ffmpeg,
+                                               source=self.media_path('robot_talk.mp3')))
+                while vc.is_playing():
+                    time.sleep(.1)
+
+                await vc.disconnect(force=True)
+
+                vc = await voice_channel.connect()
+
+                vc.play(discord.FFmpegPCMAudio(executable=self.ffmpeg,
+                                               source=self.media_path('robot_countdown.mp3')))
+                while vc.is_playing():
+                    time.sleep(.1)
+
+                await vc.disconnect(force=True)
+
+                vc = await voice_channel.connect()
+
+                vc.play(discord.FFmpegPCMAudio(executable=self.ffmpeg,
+                                               source=self.media_path('morse.mp3')))
+                while vc.is_playing():
+                    time.sleep(.1)
+
+                await vc.disconnect(force=True)
+
+                logger.debug('client had disconnected')
+
+                time.sleep(5)
+
+        finally:
+            self.locked = False
+
+
+'''
+        try:
+
+
+
 
             counter = 0
 
@@ -110,27 +173,12 @@ class EavesDropper(BaseAction):
                     return
 
                 voice_channel = await self.client.guilds[0].create_voice_channel(DiscordChannels.BotsOnly)
-                vc = await voice_channel.connect()
-                vc.play(discord.FFmpegPCMAudio(executable=self.ffmpeg,
-                                               source=self.media_path('robot_talk.mp3')))
-                while vc.is_playing():
-                    time.sleep(.1)
 
-                vc.play(discord.FFmpegPCMAudio(executable=self.ffmpeg,
-                                               source=self.media_path('robot_countdown.mp3')))
-                while vc.is_playing():
-                    time.sleep(.1)
-
-                vc.play(discord.FFmpegPCMAudio(executable=self.ffmpeg,
-                                               source=self.media_path('morse.mp3')))
-                while vc.is_playing():
-                    time.sleep(.1)
-
-                await vc.disconnect()
                 await voice_channel.delete()
 
         finally:
             self.locked = False
+'''
 
 
 class Beautiful(BaseAction):

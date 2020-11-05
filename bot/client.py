@@ -59,7 +59,8 @@ class Client(object):
         """
 
         # extract options to be passed to context setting
-        c, m, p = kwargs.pop('client'), kwargs.pop('message', None), kwargs.pop('payload', None)
+        c, m, p, b, af = kwargs.pop('client'), kwargs.pop('message', None), \
+            kwargs.pop('payload', None), kwargs.pop('before', None), kwargs.pop('after', None)
 
         for a in self.actions:
             if a.event_type() != event:
@@ -67,7 +68,7 @@ class Client(object):
 
             action = copy.deepcopy(a)
 
-            action.set_context(client=c, message=m, payload=p)
+            action.set_context(client=c, message=m, payload=p, before=b, after=af)
             if not action.match():
                 continue
 
@@ -108,7 +109,7 @@ async def on_raw_message_edit(payload):
 @dc.event
 async def on_voice_state_update(member, before, after):
     logger.debug(f'reacting to on_voice_state_update: (not used: {member}, {before}, {after})')
-    await client.run_actions(EventType.VoiceStateUpdate, client=dc)
+    await client.run_actions(EventType.VoiceStateUpdate, client=dc, before=before, after=after)
 
 
 client = Client(dc)
