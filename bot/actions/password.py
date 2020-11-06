@@ -268,16 +268,30 @@ class PasswordScore(PasswordChallengeBase):
 
                         challenge_submissions[user.userid] = challenge_submission
 
-                    string_message = ''
+                    string_messages = set()
 
                     for user_id in challenge_submissions.keys():
+                        string_message = ''
                         string_message += f'<@{user_id}> has cracked:\n'
                         for challenge_no in self.challenges:
                             string_message += f'challenge {challenge_no} - {challenge_submissions[user_id][challenge_no]}' \
                                               f'/{challenge_counts[challenge_no-1]}\n'
+                        string_messages.add(string_message)
 
-                    await self.send_channel_message(f'{string_message}', DiscordChannels.Password)
-                    return
+
+                    chunked_message = ''
+
+                    while string_messages:
+                        if len(chunked_message) > 1000:
+                            await self.send_channel_message(f'{chunked_message}', DiscordChannels.Password)
+                            #await self.message.author.send(f'{chunked_message}')
+                            chunked_message = ''
+
+                        chunked_message += string_messages.pop()
+
+                    if len(chunked_message) > 1:
+                        await self.send_channel_message(f'{chunked_message}', DiscordChannels.Password)
+                        #await self.message.author.send(f'{chunked_message}')
 
 
 class PasswordDownload(PasswordChallengeBase):
