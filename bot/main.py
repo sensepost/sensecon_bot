@@ -44,6 +44,8 @@ def cli(debug, db_debug, db_path):
 
     client.add_action(admin.SendMessage())
     client.add_action(admin.ClearChatChannel())
+    client.add_action(admin.ExtractUsersRoles())
+    client.add_action(admin.ExtractRolesUsers())
 
     logger.info('booting bot')
     client.run()
