@@ -124,3 +124,47 @@ class ClearChatChannel(Admin):
             logger.info(f'purging channel: {channel.name}')
             await channel.purge()
             logger.info(f'purged channel: {channel.name} in {category_name}')
+
+
+class ExtractUsersRoles(Admin):
+    """
+        Let's an admin retrieve user's roles.
+    """
+
+    def match(self) -> bool:
+        return self.message.content.startswith('!retrieve user roles')
+
+    async def execute(self):
+
+        async for member in self.client.guilds[0].fetch_members():
+
+            if member.id != self.message.author.id:
+                continue
+
+            # ignore non admins
+            if not await self.member_has_role(member, DiscordRoles.Admin):
+                await member.send('you are not an admin it seems')
+                return
+
+            roles_assigned = set()
+
+            async for _member in self.client.guilds[0].fetch_members():
+
+                message = f'<@{_member.id}> has the following roles:'
+
+                for role in member.roles:
+                    message += f' <@&{role.name}> '
+
+                roles_assigned.add(message)
+
+            chunked_message = ''
+
+            while roles_assigned:
+                if len(chunked_message) > 1000:
+                    await member.send(f'{chunked_message}')
+                    chunked_message = ''
+
+                chunked_message += roles_assigned.pop()
+
+            if len(chunked_message) > 1:
+                await member.send(f'{chunked_message}')
