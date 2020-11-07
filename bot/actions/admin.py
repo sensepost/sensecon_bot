@@ -153,7 +153,7 @@ class ExtractUsersRoles(Admin):
 
             async for _member in self.client.guilds[0].fetch_members():
 
-                message = f'{member.nick if member.nick else member.display_name} has the following roles:'
+                message = f'{_member.nick if _member.nick else _member.display_name} has the following roles:'
 
                 for role in _member.roles:
                     message += f' {role.name} '
