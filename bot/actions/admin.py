@@ -83,7 +83,8 @@ class SendMessage(Admin):
                 return
 
             await channel.send(f'{message}')
-            logger.info(f'member sent message as sysmon: {member.name} sent a message in {category_name}.{channel.name}')
+            logger.info(
+                f'member sent message as sysmon: {member.name} sent a message in {category_name}.{channel.name}')
 
 
 class ClearChatChannel(Admin):
@@ -148,23 +149,80 @@ class ExtractUsersRoles(Admin):
 
             roles_assigned = set()
 
+            logger.debug(f'we have entered in to the abyss of role extraction')
+
             async for _member in self.client.guilds[0].fetch_members():
 
-                message = f'<@{_member.id}> has the following roles:'
+                message = f'{member.nick if member.nick else member.display_name} has the following roles:'
 
-                for role in member.roles:
-                    message += f' <@&{role.name}> '
+                for role in _member.roles:
+                    message += f' {role.name} '
+
+                message += '\n'
 
                 roles_assigned.add(message)
 
             chunked_message = ''
 
             while roles_assigned:
-                if len(chunked_message) > 1000:
+                if len(chunked_message) > 500:
                     await member.send(f'{chunked_message}')
                     chunked_message = ''
 
                 chunked_message += roles_assigned.pop()
 
-            if len(chunked_message) > 1:
+            if len(chunked_message) > 0:
+                await member.send(f'{chunked_message}')
+
+
+class ExtractRolesUsers(Admin):
+    """
+        Let's an admin retrieve user's roles.
+    """
+
+    def match(self) -> bool:
+        return self.message.content.startswith('!retrieve role users')
+
+    async def execute(self):
+
+        async for member in self.client.guilds[0].fetch_members():
+
+            if member.id != self.message.author.id:
+                continue
+
+            # ignore non admins
+            if not await self.member_has_role(member, DiscordRoles.Admin):
+                await member.send('you are not an admin it seems')
+                return
+
+            roles_assigned = set()
+
+            logger.debug(f'we have entered in to the abyss of role extraction')
+
+            roles = await self.client.guilds[0].fetch_roles()
+
+            for role in roles:
+
+                counter = 0
+                message = f'{role.name} has the following users:'
+
+                for _member in role.members:
+                    message += f' {_member.nick if _member.nick else _member.display_name} '
+                    counter += 1
+
+                message += '\n'
+                message += f'A total of {counter} users got the role {role.name}\n'
+
+                roles_assigned.add(message)
+
+            chunked_message = ''
+
+            while roles_assigned:
+                if len(chunked_message) > 500:
+                    await member.send(f'{chunked_message}')
+                    chunked_message = ''
+
+                chunked_message += roles_assigned.pop()
+
+            if len(chunked_message) > 0:
                 await member.send(f'{chunked_message}')
